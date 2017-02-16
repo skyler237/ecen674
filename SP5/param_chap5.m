@@ -1,3 +1,4 @@
+clear all
 P.gravity = 9.8;
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -8,6 +9,20 @@ P.Jx   = 0.8244;
 P.Jy   = 1.135;
 P.Jz   = 1.759;
 P.Jxz  = .1204;
+
+Jx = P.Jx;
+Jy = P.Jy;
+Jz = P.Jz;
+Jxz = P.Jxz;
+P.gamma = (Jx*Jz - Jxz^2);
+P.gamma1 = (Jxz*(Jx - Jy + Jz))/P.gamma;
+P.gamma2 = (Jz*(Jz - Jy) + Jxz^2)/P.gamma;
+P.gamma3 = Jz/P.gamma;
+P.gamma4 = Jxz/P.gamma;
+P.gamma5 = (Jz - Jx)/Jy;
+P.gamma6 = Jxz/Jy;
+P.gamma7 = ((Jx - Jy)*Jx + Jxz^2)/P.gamma;
+P.gamma8 = Jx/P.gamma;
 % aerodynamic coefficients
 P.S_wing        = 0.55;
 P.b             = 2.8956;
@@ -51,6 +66,20 @@ P.C_n_r         = -0.35;
 P.C_n_delta_a   = 0.06;
 P.C_n_delta_r   = -0.032;
 P.C_prop        = 1.0;
+%Added
+P.C_p_0 = P.gamma3*P.C_ell_0 + P.gamma4*P.C_n_0;
+P.C_p_beta = P.gamma3*P.C_ell_beta + P.gamma4*P.C_n_beta;
+P.C_p_p = P.gamma3*P.C_ell_p + P.gamma4*P.C_n_p;
+P.C_p_r = P.gamma3*P.C_ell_r + P.gamma4*P.C_n_r;
+P.C_p_delta_a = P.gamma3*P.C_ell_delta_a + P.gamma4*P.C_n_delta_a;
+P.C_p_delta_r = P.gamma3*P.C_ell_delta_r + P.gamma4*P.C_n_delta_r;
+P.C_r_0 = P.gamma4*P.C_ell_0 + P.gamma8*P.C_n_0;
+P.C_r_beta = P.gamma4*P.C_ell_beta + P.gamma8*P.C_n_beta;
+P.C_r_p = P.gamma4*P.C_ell_p + P.gamma8*P.C_n_p;
+P.C_r_r = P.gamma4*P.C_ell_r + P.gamma8*P.C_n_r;
+P.C_r_delta_a = P.gamma4*P.C_ell_delta_a + P.gamma8*P.C_n_delta_a;
+P.C_r_delta_r = P.gamma4*P.C_ell_delta_r + P.gamma8*P.C_n_delta_r;
+% =======
 P.M             = 50;
 P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
@@ -69,9 +98,9 @@ P.sigma_w = .7;
 
 % compute trim conditions using 'mavsim_chap5_trim.slx'
 % initial airspeed
-P.Va0 = 17;
-gamma = 5*pi/180;  % desired flight path angle (radians)
-R     = 150;         % desired radius (m) - use (+) for right handed orbit, 
+P.Va0 = 35;
+gamma = 0;  % desired flight path angle (radians)
+R     = inf;         % desired radius (m) - use (+) for right handed orbit, 
 
 % autopilot sample rate
 P.Ts = 0.01;

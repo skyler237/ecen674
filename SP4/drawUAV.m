@@ -34,12 +34,18 @@ function drawUAV(uu,V,F,patchcolors)
         ylabel('North')
         zlabel('-Down')
         view(32,47)  % set the vieew angle for figure
-        width = 50.0;
-        axis([-width,width,-width,width,-width,width]);
+        width = 10.0;
+        axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
+        axis(axes)
+        grid on
         hold on
         
     % at every other time step, redraw base and rod
     else 
+        width = 10.0;
+        figure(1);
+        axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
+        axis(axes)
         drawUAVBody(Vertices,Faces,facecolors,...
                            pn,pe,pd,phi,theta,psi,...
                            uav_handle);
