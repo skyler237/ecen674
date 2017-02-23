@@ -41,42 +41,53 @@ function out = forces_moments(x, delta, wind, P)
     g = P.gravity;
     
     % compute wind data in NED
-    V_wind_body = rotate([w_ns; w_es; w_ds], phi, theta, psi) + [u_wg; v_wg; w_wg];
-    w_n = V_wind_body(1);
-    w_e = V_wind_body(2);
-    w_d = V_wind_body(3);
+    V_wind_body = rotate_i2b([w_ns; w_es; w_ds], phi, theta, psi) + [u_wg; v_wg; w_wg];
+    V_wind_inertial = rotate_b2i([u_wg; v_wg; w_wg], phi, theta, psi) + [w_ns; w_es; w_ds];
+    w_n = V_wind_inertial(1);
+    w_e = V_wind_inertial(2);
+    w_d = V_wind_inertial(3);
     
     % compute air data
     V_airspeed_body = [u; v; w] - V_wind_body;
-    max_airspeed = 10000; % Just to create some cap on the max value
-    V_airspeed_body(1) = saturate(V_airspeed_body(1), 0.000, max_airspeed);
-    V_airspeed_body(2) = saturate(V_airspeed_body(2), 0.000, max_airspeed);
-    V_airspeed_body(3) = saturate(V_airspeed_body(3), 0.000, max_airspeed);
-    if(norm(V_airspeed_body) > max_airspeed)
-       V_airspeed_body = V_airspeed_body/norm(V_airspeed_body)*max_airspeed; 
+    ur = V_airspeed_body(1);
+    vr = V_airspeed_body(2);
+    wr = V_airspeed_body(3);
+%     max_airspeed = 10000; % Just to create some cap on the max value
+%     V_airspeed_body(1) = saturate(V_airspeed_body(1), 0.000, max_airspeed);
+%     V_airspeed_body(2) = saturate(V_airspeed_body(2), 0.000, max_airspeed);
+%     V_airspeed_body(3) = saturate(V_airspeed_body(3), 0.000, max_airspeed);
+%     if(norm(V_airspeed_body) > max_airspeed)
+%        V_airspeed_body = V_airspeed_body/norm(V_airspeed_body)*max_airspeed; 
+%     end
+%     
+%     if(norm(V_airspeed_body) ~= 0)
+%         Va = norm(V_airspeed_body);
+%     else 
+%         Va = 0.0001;
+%     end
+%          
+%     
+%     
+% %     alpha = atan2(V_airspeed_body(3),V_airspeed_body(2))
+%     if (V_airspeed_body(1) == 0)
+%         if (V_airspeed_body(3) == 0)
+%            alpha = 0;
+%         else
+%            alpha = sign(V_airspeed_body(3))*pi;  
+%         end       
+%     else
+%         alpha = atan(V_airspeed_body(3)/V_airspeed_body(1));
+%     end
+%     
+%     beta = asin(V_airspeed_body(2)/Va);
+%     check_beta = beta;
+
+    Va = sqrt(ur^2 + vr^2 + wr^2);
+    if(Va == 0)
+        Va = 0.00001;
     end
-    
-    if(norm(V_airspeed_body) ~= 0)
-        Va = norm(V_airspeed_body);
-    else 
-        Va = 0.0001;
-    end
-         
-    
-    
-%     alpha = atan2(V_airspeed_body(3),V_airspeed_body(2))
-    if (V_airspeed_body(1) == 0)
-        if (V_airspeed_body(3) == 0)
-           alpha = 0;
-        else
-           alpha = sign(V_airspeed_body(3))*pi;  
-        end       
-    else
-        alpha = atan(V_airspeed_body(3)/V_airspeed_body(1));
-    end
-    
-    beta = asin(V_airspeed_body(2)/Va);
-    check_beta = beta;
+    alpha = atan2(wr, ur);
+    beta = atan2(vr, sqrt(ur^2 + wr^2));
 
     % compute external forces and torques on aircraft
     F_grav = [ -mass*g*sin(theta);...
@@ -127,7 +138,7 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
-function vec=rotate(vec,phi,theta,psi)
+function vec=rotate_i2b(vec,phi,theta,psi)
 
   % define rotation matrix (right handed)
   R_roll = [...
@@ -149,6 +160,31 @@ function vec=rotate(vec,phi,theta,psi)
 
   % rotate vector
   vec = R*vec;
+  
+end
+
+function vec=rotate_b2i(vec,phi,theta,psi)
+
+  % define rotation matrix (right handed)
+  R_roll = [...
+          1, 0, 0;...
+          0, cos(phi), sin(phi);...
+          0, -sin(phi), cos(phi)];
+  R_pitch = [...
+          cos(theta), 0, -sin(theta);...
+          0, 1, 0;...
+          sin(theta), 0, cos(theta)];
+  R_yaw = [...
+          cos(psi), sin(psi), 0;...
+          -sin(psi), cos(psi), 0;...
+          0, 0, 1];
+  R = R_roll*R_pitch*R_yaw;  
+    % note that R above either leaves the vector alone or rotates
+    % a vector in a left handed rotation.  We want to rotate all
+    % points in a right handed rotation, so we must transpose
+
+  % rotate vector
+  vec = R'*vec;
   
 end
 
