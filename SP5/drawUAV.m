@@ -34,17 +34,17 @@ function drawUAV(uu,V,F,patchcolors)
         ylabel('North')
         zlabel('-Down')
         view(32,47)  % set the vieew angle for figure
-        width = 10.0;
+        width = 1000.0;
         axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
         axis(axes)
         hold on
         
     % at every other time step, redraw base and rod
     else 
-        width = 10.0;
-        figure(1);
-        axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
-        axis(axes)
+%         width = 10.0;
+%         figure(1);
+%         axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
+%         axis(axes)
         drawUAVBody(Vertices,Faces,facecolors,...
                            pn,pe,pd,phi,theta,psi,...
                            uav_handle);
@@ -124,15 +124,15 @@ end
 % defineUAVBody
 %=======================================================================
 function [V,F,facecolors] = defineUAVBody
-
-fuse_h = 1.0;
-fuse_l1 = 2.0;
-fuse_l2 = 1.0;
-fuse_l3 = 4.0;
-fuse_w = 1.0;
-wing_l = 2.0;
-wing_w = 5.0;
-tail_h = 2.0;
+scale = 100;
+fuse_h = 1.0*scale;
+fuse_l1 = 2.0*scale;
+fuse_l2 = 1.0*scale;
+fuse_l3 = 4.0*scale;
+fuse_w = 1.0*scale;
+wing_l = 2.0*scale;
+wing_w = 5.0*scale;
+tail_h = 2.0*scale;
 tailwing_l = 1.0;
 tailwing_w = 3.0;
 % Define the vertices (physical location of vertices
