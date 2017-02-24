@@ -83,9 +83,13 @@ function out = forces_moments(x, delta, wind, P)
 %     check_beta = beta;
 
     Va = sqrt(ur^2 + vr^2 + wr^2);
-    if(Va == 0)
-        Va = 0.00001;
-    end
+%     if(Va == 0)
+% %         Va = 0.01;
+%         ur = 1e-10;
+%         vr = 1e-10;
+%         wr = 1e-10;
+%         Va = sqrt(ur^2 + vr^2 + wr^2);
+%     end
     alpha = atan2(wr, ur);
     beta = atan2(vr, sqrt(ur^2 + wr^2));
 
@@ -94,40 +98,100 @@ function out = forces_moments(x, delta, wind, P)
                 mass*g*cos(theta)*sin(phi);...
                 mass*g*cos(theta)*cos(phi)];
     
-    % Aerodynamic definitions
+    % Aerodynamic definitions    
+    sa = sin(alpha);
+    ca = cos(alpha);
     AR = P.b^2/P.S_wing;
     sigmoid = (1 + exp(-P.M*(alpha - P.alpha0)) + exp(P.M*(alpha + P.alpha0)))/...
               ((1 + exp(-P.M*(alpha - P.alpha0)))*(1 + exp(P.M*(alpha + P.alpha0))));
-    C_D = P.C_D_p + (P.C_L_0 + P.C_L_alpha*alpha)^2/(pi*P.e*AR);
-    C_L = (1 - sigmoid)*(P.C_L_0 + P.C_L_alpha*alpha) + sigmoid*(2*sign(alpha)*(sin(alpha))^2*cos(alpha));
-    C_X = -C_D*cos(alpha) + C_L*(alpha);
-    C_X_q = -P.C_D_q*cos(alpha) + P.C_L_q*sin(alpha);
-    C_X_delta_e = -P.C_D_delta_e*cos(alpha) + P.C_L_delta_e*sin(alpha);
-    C_Z = -C_D*sin(alpha) - C_L*cos(alpha);
-    C_Z_q = -P.C_D_q*sin(alpha) - P.C_L_q*cos(alpha);
-    C_Z_delta_e = -P.C_D_delta_e*sin(alpha) - P.C_L_delta_e*cos(alpha);
+    C_D = P.C_D_0 + (P.C_L_0 + P.C_L_alpha*alpha)^2/(pi*P.e*AR);
+%     C_L = (1 - sigmoid)*(P.C_L_0 + P.C_L_alpha*alpha) + sigmoid*(2*sign(alpha)*(sa)^2*ca);
+    C_L = (1 - sigmoid)*(P.C_L_0 + P.C_L_alpha*alpha);
+    if alpha>=0, 
+        C_L = C_L + sigmoid*2*sa*sa*ca;
+    else
+        C_L = C_L - sigmoid*2*sa*sa*ca;
+    end
+    C_X = -C_D*ca + C_L*sa;
+    C_X_q = -P.C_D_q*ca + P.C_L_q*sa;
+    C_X_delta_e = -P.C_D_delta_e*ca + P.C_L_delta_e*sa;
+    C_Z = -C_D*sa - C_L*ca;
+    C_Z_q = -P.C_D_q*sa - P.C_L_q*ca;
+    C_Z_delta_e = -P.C_D_delta_e*sa - P.C_L_delta_e*ca;
     
-    F_aero = 1/2*P.rho*Va^2*P.S_wing*...
-        [C_X + C_X_q*(P.c/(2*Va))*q + C_X_delta_e*delta_e;...
-        P.C_Y_0 + P.C_Y_beta*beta + P.C_Y_p*(P.b/(2*Va))*p + P.C_Y_r*(P.b/(2*Va))*r + P.C_Y_delta_a*delta_a + P.C_Y_delta_r*delta_r;...
-        C_Z + C_Z_q*(P.c/(2*Va))*q + C_Z_delta_e*delta_e ];
+    if (Va ~= 0)
+        F_aero = 1/2*P.rho*Va^2*P.S_wing*...
+            [C_X + C_X_q*(P.c/(2*Va))*q + C_X_delta_e*delta_e;...
+            P.C_Y_0 + P.C_Y_beta*beta + P.C_Y_p*(P.b/(2*Va))*p + P.C_Y_r*(P.b/(2*Va))*r + P.C_Y_delta_a*delta_a + P.C_Y_delta_r*delta_r;...
+            C_Z + C_Z_q*(P.c/(2*Va))*q + C_Z_delta_e*delta_e ];
+    else
+        F_aero = 0;
+    end
+
+        F_prop = 1/2*P.rho*P.S_prop*P.C_prop*[(P.k_motor*delta_t+Va)^2 - Va^2; ...
+                                                0;...
+                                                0];
     
-    F_prop = 1/2*P.rho*P.S_prop*P.C_prop*[(P.k_motor*delta_t)^2 - Va^2; ...
-                                            0;...
-                                            0];
-    
+                                            
+
     Force = F_grav + F_aero + F_prop;
-    check_force = Force;
+    my_force = Force;
+
+%     qbar = 0.5*P.rho*Va^2;
+%     CL = C_L;
+%     CD = C_D;
+% 
+%     % Beard implementation
+%     Force = F_grav;
+%     Force(1) = Force(1) + qbar*P.S_wing*(-CD*ca + CL*sa);
+%     Force(1) = Force(1) + qbar*P.S_wing*(-P.C_D_q*ca + P.C_L_q*sa)*P.c*q/(2*Va);
+% 
+%     Force(2) = Force(2) + qbar*P.S_wing*(P.C_Y_0 + P.C_Y_beta*beta);
+%     Force(2) = Force(2) + qbar*P.S_wing*(P.C_Y_p*p + P.C_Y_r*r)*P.b/(2*Va);
+% 
+%     Force(3) = Force(3) + qbar*P.S_wing*(-CD*sa - CL*ca);
+%     Force(3) = Force(3) + qbar*P.S_wing*(-P.C_D_q*sa - P.C_L_q*ca)*P.c*q/(2*Va);
+%     Force(1) = Force(1) + qbar*P.S_wing*(-P.C_D_delta_e*ca+P.C_L_delta_e*sa)*delta_e;
+%     Force(2) = Force(2) + qbar*P.S_wing*(P.C_Y_delta_a*delta_a + P.C_Y_delta_r*delta_r);
+%     Force(3) = Force(3) + qbar*P.S_wing*(-P.C_D_delta_e*sa-P.C_L_delta_e*ca)*delta_e;
+%     motor_temp = (P.k_motor*delta_t+Va)^2-Va^2; % revised model from book
+%     Force(1) = Force(1) + 0.5*P.rho*P.S_prop*P.C_prop*motor_temp;
+%     beard_force = Force;
     
-    T_aero = 1/2*P.rho*Va^2*P.S_wing*...
-        [P.b*(P.C_ell_0 + P.C_ell_beta*beta + P.C_ell_p*(P.b/(2*Va))*p + P.C_ell_r*(P.b/(2*Va))*r + P.C_ell_delta_a*delta_a + P.C_ell_delta_r*delta_r);...
-        P.c*(P.C_m_0 + P.C_m_alpha*alpha + P.C_m_q*(P.c/(2*Va))*q + P.C_m_delta_e*delta_e);...
-        P.b*(P.C_n_0 + P.C_n_beta*beta + P.C_n_p*(P.b/(2*Va))*p + P.C_n_r*(P.b/(2*Va))*r + P.C_n_delta_a*delta_a + P.C_n_delta_r*delta_r)];
+    if(Va ~= 0)
+        T_aero = 1/2*P.rho*Va^2*P.S_wing*...
+            [P.b*(P.C_ell_0 + P.C_ell_beta*beta + P.C_ell_p*(P.b/(2*Va))*p + P.C_ell_r*(P.b/(2*Va))*r + P.C_ell_delta_a*delta_a + P.C_ell_delta_r*delta_r);...
+            P.c*(P.C_m_0 + P.C_m_alpha*alpha + P.C_m_q*(P.c/(2*Va))*q + P.C_m_delta_e*delta_e);...
+            P.b*(P.C_n_0 + P.C_n_beta*beta + P.C_n_p*(P.b/(2*Va))*p + P.C_n_r*(P.b/(2*Va))*r + P.C_n_delta_a*delta_a + P.C_n_delta_r*delta_r)];
+    else
+        T_aero = 0; 
+    end
+    
     T_prop = [-P.k_T_P*(P.k_Omega*delta_t)^2;...
                 0;...
                 0];
     
     Torque = T_aero + T_prop;
+    my_torque = Torque;
+    
+%     % Beard implementation
+%     Torque(1) = qbar*P.S_wing*P.b*(P.C_ell_0 + P.C_ell_beta*beta);
+%     Torque(1) = Torque(1) + qbar*P.S_wing*P.b*(P.C_ell_p*p + P.C_ell_r*r)*P.b/(2*Va);
+% 
+%     Torque(2) = qbar*P.S_wing*P.c*(P.C_m_0 + P.C_m_alpha*alpha);
+%     Torque(2) = Torque(2) + qbar*P.S_wing*P.c*P.C_m_q*P.c*q/(2*Va);
+% 
+%     Torque(3) = qbar*P.S_wing*P.b*(P.C_n_0 + P.C_n_beta*beta);
+%     Torque(3) = Torque(3) + qbar*P.S_wing*P.b*(P.C_n_p*p + P.C_n_r*r)*P.b/(2*Va);
+%     
+%     Torque(1) = Torque(1) + qbar*P.S_wing*P.b*(P.C_ell_delta_a*delta_a + P.C_ell_delta_r*delta_r);
+%     Torque(2) = Torque(2) + qbar*P.S_wing*P.c*P.C_m_delta_e*delta_e;
+%     Torque(3) = Torque(3) + qbar*P.S_wing*P.b*(P.C_n_delta_a*delta_a + P.C_n_delta_r*delta_r);
+%     beard_torque = Torque;
+    
+%     diff_force = beard_force - my_force;
+%     diff_torque = beard_torque - my_torque;
+%     check_difference = diff_torque;
     
     Check_force_real = 0;
     Check_force_finite = sum(isinf(Force));
