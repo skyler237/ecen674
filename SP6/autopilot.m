@@ -331,8 +331,8 @@ end
 function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     % Design Parameters
     phi_c_max = 45.0*pi/180.0;
-    W_chi = 7;
-    zeta_chi = 0.707;    
+    W_chi = 10;
+    zeta_chi = 2.0;    
     persistent wn_phi
     if (isInit)
         % These Should match roll hold loop 
