@@ -52,44 +52,9 @@ function out = forces_moments(x, delta, wind, P)
     ur = V_airspeed_body(1);
     vr = V_airspeed_body(2);
     wr = V_airspeed_body(3);
-%     max_airspeed = 10000; % Just to create some cap on the max value
-%     V_airspeed_body(1) = saturate(V_airspeed_body(1), 0.000, max_airspeed);
-%     V_airspeed_body(2) = saturate(V_airspeed_body(2), 0.000, max_airspeed);
-%     V_airspeed_body(3) = saturate(V_airspeed_body(3), 0.000, max_airspeed);
-%     if(norm(V_airspeed_body) > max_airspeed)
-%        V_airspeed_body = V_airspeed_body/norm(V_airspeed_body)*max_airspeed; 
-%     end
-%     
-%     if(norm(V_airspeed_body) ~= 0)
-%         Va = norm(V_airspeed_body);
-%     else 
-%         Va = 0.0001;
-%     end
-%          
-%     
-%     
-% %     alpha = atan2(V_airspeed_body(3),V_airspeed_body(2))
-%     if (V_airspeed_body(1) == 0)
-%         if (V_airspeed_body(3) == 0)
-%            alpha = 0;
-%         else
-%            alpha = sign(V_airspeed_body(3))*pi;  
-%         end       
-%     else
-%         alpha = atan(V_airspeed_body(3)/V_airspeed_body(1));
-%     end
-%     
-%     beta = asin(V_airspeed_body(2)/Va);
-%     check_beta = beta;
 
     Va = sqrt(ur^2 + vr^2 + wr^2);
-%     if(Va == 0)
-% %         Va = 0.01;
-%         ur = 1e-10;
-%         vr = 1e-10;
-%         wr = 1e-10;
-%         Va = sqrt(ur^2 + vr^2 + wr^2);
-%     end
+
     alpha = atan2(wr, ur);
     beta = atan2(vr, sqrt(ur^2 + wr^2));
 

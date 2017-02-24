@@ -36,7 +36,7 @@ function y = autopilot(uu,P)
     NN = NN+3;
     t        = uu(1+NN);   % time
     
-    autopilot_version = 2;
+    autopilot_version = 1;
         % autopilot_version == 1 <- used for tuning
         % autopilot_version == 2 <- standard autopilot defined in book
         % autopilot_version == 3 <- Total Energy Control for longitudinal AP
@@ -64,11 +64,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P)
 
-    mode = 5;
+    mode = 2;
     switch mode
         case 1, % tune the roll loop
             phi_c = chi_c; % interpret chi_c to autopilot as course command
-            delta_a = roll_hold(phi_c, phi, p, P);
+            delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
             delta_e = P.u_trim(1);
@@ -76,11 +76,11 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
             theta_c = 0;
         case 2, % tune the course loop
             if t==0,
-                phi_c   = course_hold(chi_c, chi, r, 1, P);
+                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
             else
-                phi_c   = course_hold(chi_c, chi, r, 0, P);
+                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
             end                
-            delta_a = roll_hold(phi_c, phi, p, P);
+            delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
             delta_e = P.u_trim(1);
@@ -90,42 +90,42 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
             theta_c = 20*pi/180 + h_c;
             chi_c = 0;
             if t==0,
-                phi_c   = course_hold(chi_c, chi, r, 1, P);
+                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 1, P);
            else
-                phi_c   = course_hold(chi_c, chi, r, 0, P);
+                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 0, P);
             end
             delta_e = pitch_hold(theta_c, theta, q, P);
-            delta_a = roll_hold(phi_c, phi, p, P);
+            delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
         case 4, % tune the pitch to airspeed loop 
             chi_c = 0;
             delta_t = P.u_trim(4);
             if t==0,
-                phi_c   = course_hold(chi_c, chi, r, 1, P);
+                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
                 theta_c = airspeed_with_pitch_hold(Va_c, Va, 1, P);
            else
-                phi_c   = course_hold(chi_c, chi, r, 0, P);
+                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
                 theta_c = airspeed_with_pitch_hold(Va_c, Va, 0, P);
             end
-            delta_a = roll_hold(phi_c, phi, p, P);
+            delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_e = pitch_hold(theta_c, theta, q, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
         case 5, % tune the pitch to altitude loop 
             chi_c = 0;
             if t==0,
-                phi_c   = course_hold(chi_c, chi, r, 1, P);
+                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
                 theta_c = altitude_hold(h_c, h, 1, P);
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 1, P);
            else
-                phi_c   = course_hold(chi_c, chi, r, 0, P);
+                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
                 theta_c = altitude_hold(h_c, h, 0, P);
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 0, P);
             end
-            delta_a = roll_hold(phi_c, phi, p, P);
+            delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_e = pitch_hold(theta_c, theta, q, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
@@ -165,13 +165,13 @@ function [delta, x_command] = autopilot_uavbook(Va_c,h_c,chi_c,Va,h,chi,phi,thet
     if t==0,
         % assume no rudder, therefore set delta_r=0
         delta_r = 0;%coordinated_turn_hold(beta, 1, P);
-        phi_c   = course_hold(chi_c, chi, r, 1, P);
+        phi_c   = course_hold(chi_c, chi, r, 1, t, P);
 
     else
-        phi_c   = course_hold(chi_c, chi, r, 0, P);
+        phi_c   = course_hold(chi_c, chi, r, 0, t, P);
         delta_r = 0;%coordinated_turn_hold(beta, 0, P);
     end
-    delta_a = roll_hold(phi_c, phi, p, P);     
+    delta_a = roll_hold(phi_c, phi, p, t, P);     
   
     
     %----------------------------------------------------------
@@ -247,13 +247,13 @@ function [delta, x_command] = autopilot_TECS(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p
     if t==0,
         % assume no rudder, therefore set delta_r=0
         delta_r = 0;%coordinated_turn_hold(beta, 1, P);
-        phi_c   = course_hold(chi_c, chi, r, 1, P);
+        phi_c   = course_hold(chi_c, chi, r, 1, t, P);
 
     else
-        phi_c   = course_hold(chi_c, chi, r, 0, P);
+        phi_c   = course_hold(chi_c, chi, r, 0, t, P);
         delta_r = 0;%coordinated_turn_hold(beta, 0, P);
     end
-    delta_a = roll_hold(phi_c, phi, p, P);     
+    delta_a = roll_hold(phi_c, phi, p, t, P);     
   
     
     %----------------------------------------------------------
@@ -297,8 +297,88 @@ end
 % Autopilot functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Roll hold function
+function delta_a = roll_hold(phi_c, phi, p, t, P)    
+    % Design Parameters
+    delta_a_max = 30.0*pi/180.0; 
+    e_max = 10*pi/180.0;
+    zeta_phi = 0.707;
+    
+    % Control constants
+    kp_phi = delta_a_max/e_max;    
+    wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);    
+    kd_phi = (2*zeta_phi*wn_phi - P.a_phi1)/P.a_phi2;
+    ki_phi = 0;
+    
+    % Compute integral
+    error = phi_c - phi;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if t<P.Ts
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    delta_a = kp_phi*(phi_c - phi) + ki_phi*integrator - kd_phi*p;
+    delta_a = sat(delta_a, delta_a_max, -delta_a_max);
+end
 
-
+% Course hold function
+function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
+    % Design Parameters
+    phi_c_max = 45.0*pi/180.0;
+    W_chi = 7;
+    zeta_chi = 0.707;    
+    persistent wn_phi
+    if (isInit)
+        % These Should match roll hold loop 
+        delta_a_max = 30.0*pi/180.0; 
+        e_max = 10*pi/180.0;
+        wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);   
+    end
+    
+    % Control constants
+    Vg = P.Va0;
+    wn_chi = (1/W_chi)*wn_phi;
+    kp_chi = 2*zeta_chi*wn_chi*Vg/P.gravity;
+    ki_chi = wn_chi^2*Vg/P.gravity;
+    
+    % Compute integral
+    error = chi_c - chi;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if t<P.Ts
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator;
+    phi_c = sat(phi_c, phi_c_max, -phi_c_max);
+end
+    
+% function theta_c = airspeed_with_pitch_hold(Va_c, Va, isInit, P)
+% 
+% end
+%     
+% function delta_e = pitch_hold(theta_c, theta, q, P)
+% 
+% end
+%     
+% function delta_t = airspeed_with_throttle_hold(Va_c, Va, isInit, P)
+% 
+% end
+%     
+% function theta_c = altitude_hold(h_c, h, isInit, P)
+% 
+% end
 
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
