@@ -158,26 +158,12 @@ function sys=mdlDerivatives(t,x,uu, P)
     m     = uu(5);
     n     = uu(6);
     
-    Jx = P.Jx;
-    Jy = P.Jy;
-    Jz = P.Jz;
-    Jxz = P.Jxz;
-    gamma = (Jx*Jz - Jxz^2);
-    gamma1 = (Jxz*(Jx - Jy + Jz))/gamma;
-    gamma2 = (Jz*(Jz - Jy) + Jxz^2)/gamma;
-    gamma3 = Jz/gamma;
-    gamma4 = Jxz/gamma;
-    gamma5 = (Jz - Jx)/Jy;
-    gamma6 = Jxz/Jy;
-    gamma7 = ((Jx - Jy)*Jx + Jxz^2)/gamma;
-    gamma8 = Jx/gamma;
-    
     lambda = 1000;
     e = [e0 e1 e2 e3];
     
     
     % TEST
-    e = e/norm(e);
+%     e = e/norm(e);
   
 %     pndot = (cos(theta)*cos(psi))*u + (sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi))*v + (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*w;
 %     pedot = (cos(theta)*sin(psi))*u + (sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi))*v + (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*w;
@@ -206,9 +192,9 @@ function sys=mdlDerivatives(t,x,uu, P)
    e2dot = edot(3);
    e3dot = edot(4);
 
-    pdot = gamma1*p*q - gamma2*q*r + gamma3*ell + gamma4*n;
-    qdot = gamma5*p*r - gamma6*(p^2 - r^2) + (1/Jy)*m;
-    rdot = gamma7*p*q - gamma1*q*r + gamma4*ell + gamma8*n;
+    pdot = P.gamma1*p*q - P.gamma2*q*r + P.gamma3*ell + P.gamma4*n;
+    qdot = P.gamma5*p*r - P.gamma6*(p^2 - r^2) + (1/P.Jy)*m;
+    rdot = P.gamma7*p*q - P.gamma1*q*r + P.gamma4*ell + P.gamma8*n;
 
 % sys = [pndot; pedot; pddot; udot; vdot; wdot; phidot; thetadot; psidot; pdot; qdot; rdot];
 sys = [pndot; pedot; pddot; udot; vdot; wdot; e0dot; e1dot; e2dot; e3dot; pdot; qdot; rdot];

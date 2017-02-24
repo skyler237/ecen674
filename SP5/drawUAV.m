@@ -133,8 +133,8 @@ fuse_w = 1.0*scale;
 wing_l = 2.0*scale;
 wing_w = 5.0*scale;
 tail_h = 2.0*scale;
-tailwing_l = 1.0;
-tailwing_w = 3.0;
+tailwing_l = 1.0*scale;
+tailwing_w = 3.0*scale;
 % Define the vertices (physical location of vertices
 V = [...
     fuse_l1, 0, 0;...   % pt 1
