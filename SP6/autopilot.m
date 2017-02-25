@@ -76,9 +76,9 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
             theta_c = 0;
         case 2, % tune the course loop
             if t==0,
-                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
+                phi_c   = course_hold(chi_c, chi, Va, 1, t, P);
             else
-                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
+                phi_c   = course_hold(chi_c, chi, Va, 0, t, P);
             end                
             delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
@@ -301,8 +301,8 @@ end
 function delta_a = roll_hold(phi_c, phi, p, t, P)    
     % Design Parameters
     delta_a_max = 30.0*pi/180.0; 
-    e_max = 180*pi/180.0;
-    zeta_phi = 3.5;
+    e_max = 120*pi/180.0;
+    zeta_phi = 0.95;
     
     % Control constants
     kp_phi = delta_a_max/e_max;  
@@ -328,16 +328,16 @@ function delta_a = roll_hold(phi_c, phi, p, t, P)
 end
 
 % Course hold function
-function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
+function phi_c = course_hold(chi_c, chi, Va, isInit, t, P)
     % Design Parameters
     phi_c_max = 45*pi/180.0;
-    W_chi = 20;
-    zeta_chi = 0.7;    
+    W_chi = 11;
+    zeta_chi = 5.5;    
 %     persistent wn_phi
 %     if (isInit)
         % These Should match roll hold loop 
         delta_a_max = 30.0*pi/180.0; 
-        e_max = 180*pi/180.0;
+        e_max = 120*pi/180.0;
         wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);   
 %     end
     
@@ -362,9 +362,6 @@ function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     error_d1 = error;
     
     % Output
-    % Test
-    chi_c;
-    chi;
     phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator;
     phi_c = sat(phi_c, phi_c_max, -phi_c_max);
 end
