@@ -301,14 +301,14 @@ end
 function delta_a = roll_hold(phi_c, phi, p, t, P)    
     % Design Parameters
     delta_a_max = 30.0*pi/180.0; 
-    e_max = 90*pi/180.0;
-    zeta_phi = 4.0;
+    e_max = 180*pi/180.0;
+    zeta_phi = 3.5;
     
     % Control constants
-    kp_phi = delta_a_max/e_max;    
+    kp_phi = delta_a_max/e_max;  
     wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);    
     kd_phi = (2*zeta_phi*wn_phi - P.a_phi1)/P.a_phi2;
-    ki_phi = 0.01;
+    ki_phi = 0.04;
     
     % Compute integral
     error = phi_c - phi;
@@ -330,14 +330,14 @@ end
 % Course hold function
 function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     % Design Parameters
-    phi_c_max = 45.0*pi/180.0;
-    W_chi = 10;
-    zeta_chi = 2.0;    
+    phi_c_max = 45*pi/180.0;
+    W_chi = 20;
+    zeta_chi = 0.7;    
 %     persistent wn_phi
 %     if (isInit)
         % These Should match roll hold loop 
         delta_a_max = 30.0*pi/180.0; 
-        e_max = 20*pi/180.0;
+        e_max = 90*pi/180.0;
         wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);   
 %     end
     
@@ -347,7 +347,7 @@ function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     wn_chi = (1/W_chi)*wn_phi;
     kp_chi = 2*zeta_chi*wn_chi*Vg/P.gravity;
     ki_chi = wn_chi^2*Vg/P.gravity;
-    kd_chi = 10.0;
+    kd_chi = 0.0;
     
     % Compute integral
     error = chi_c - chi;
@@ -365,7 +365,7 @@ function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     % Test
     chi_c;
     chi;
-    phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator - kd_chi*r;
+    phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator;
     phi_c = sat(phi_c, phi_c_max, -phi_c_max);
 end
     
