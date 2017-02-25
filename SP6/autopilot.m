@@ -64,7 +64,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P)
 
-    mode = 2;
+    mode = 1;
     switch mode
         case 1, % tune the roll loop
             phi_c = chi_c; % interpret chi_c to autopilot as course command
@@ -301,14 +301,14 @@ end
 function delta_a = roll_hold(phi_c, phi, p, t, P)    
     % Design Parameters
     delta_a_max = 30.0*pi/180.0; 
-    e_max = 10*pi/180.0;
-    zeta_phi = 0.707;
+    e_max = 90*pi/180.0;
+    zeta_phi = 4.0;
     
     % Control constants
     kp_phi = delta_a_max/e_max;    
     wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);    
     kd_phi = (2*zeta_phi*wn_phi - P.a_phi1)/P.a_phi2;
-    ki_phi = 0;
+    ki_phi = 0.01;
     
     % Compute integral
     error = phi_c - phi;
@@ -333,26 +333,28 @@ function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     phi_c_max = 45.0*pi/180.0;
     W_chi = 10;
     zeta_chi = 2.0;    
-    persistent wn_phi
-    if (isInit)
+%     persistent wn_phi
+%     if (isInit)
         % These Should match roll hold loop 
         delta_a_max = 30.0*pi/180.0; 
-        e_max = 10*pi/180.0;
+        e_max = 20*pi/180.0;
         wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);   
-    end
+%     end
     
     % Control constants
     Vg = P.Va0;
+%     Vg = Va;
     wn_chi = (1/W_chi)*wn_phi;
     kp_chi = 2*zeta_chi*wn_chi*Vg/P.gravity;
     ki_chi = wn_chi^2*Vg/P.gravity;
+    kd_chi = 10.0;
     
     % Compute integral
     error = chi_c - chi;
     persistent integrator
     persistent error_d1
     % reset persistent variables at start of simulation
-    if t<P.Ts
+    if isInit
        integrator = 0;
        error_d1   = 0;
     end
@@ -360,7 +362,10 @@ function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     error_d1 = error;
     
     % Output
-    phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator;
+    % Test
+    chi_c;
+    chi;
+    phi_c = kp_chi*(chi_c - chi) + ki_chi*integrator - kd_chi*r;
     phi_c = sat(phi_c, phi_c_max, -phi_c_max);
 end
     
