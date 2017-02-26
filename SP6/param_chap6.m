@@ -207,4 +207,13 @@ zeta_V1 = 3.0;
 P.ki_V1 =  P.wn_V1^2/(P.a_V2);
 P.kp_V1 = (2*zeta_V1*P.wn_V1 - P.a_V1)/(P.a_V2);
 
+% <<<<<<< Altitude hold >>>>>>>
+% Design Parameters
+W_h = 15;
+zeta_h = 0.7;   
+% Control constants
+Va = P.Va0;
+P.wn_h = (1/W_h)*P.wn_theta;
+P.ki_h = P.wn_h^2/(P.K_DC_theta*Va);
+P.kp_h = (2*zeta_h*P.wn_h)/(P.K_DC_theta*Va);
 

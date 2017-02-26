@@ -64,7 +64,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P)
 
-    mode = 4;
+    mode = 5;
     switch mode
         case 1, % tune the roll loop
             phi_c = chi_c; % interpret chi_c to autopilot as course command
@@ -430,9 +430,35 @@ function delta_t = airspeed_with_throttle_hold(Va_c, Va, isInit, P)
     delta_t = sat(delta_t, delta_t_max, 0);
 end
     
-% function theta_c = altitude_hold(h_c, h, isInit, P)
-% 
-% end
+function theta_c = altitude_hold(h_c, h, isInit, P)
+    % Design Parameters
+    theta_c_max = P.theta_c_max;      
+    
+    % Control constants
+    ki_h = P.ki_h;
+    kp_h = P.kp_h;
+    
+    % Compute integral
+    error = h_c - h;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if isInit
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    theta_c_unsat = kp_h*(h_c - h) + ki_h*integrator;
+    theta_c = sat(theta_c_unsat, theta_c_max, -theta_c_max);
+    
+    % integrator anti-windup
+    if ki_h~=0,
+        integrator = integrator + P.Ts/ki_h*(theta_c - theta_c_unsat);
+    end
+end
 
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
