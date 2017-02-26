@@ -179,20 +179,20 @@ P.kd_chi = 0.0;
 % <<<<<<< Pitch hold >>>>>>>
 % Design Parameters
 P.delta_e_max = 45.0*pi/180.0; 
-e_theta_max = 40*pi/180.0;
+e_theta_max = 30*pi/180.0;
 zeta_theta = 0.4;
 % Control constants
 P.kp_theta = P.delta_e_max/e_theta_max*sign(P.a_theta3);  
 P.wn_theta = sqrt(P.a_theta2 + (P.delta_e_max/e_theta_max)*abs(P.a_theta3)); % less than or equal
 P.kd_theta = (2*zeta_theta*P.wn_theta - P.a_theta1)/P.a_theta3;
-P.ki_theta = -1.0;
+P.ki_theta = -0.8;
 P.K_DC_theta = P.kp_theta*P.a_theta3/(P.a_theta2 + P.kp_theta*P.a_theta3);
 
 % <<<<<<< Airspeed with pitch hold >>>>>>>
 % Design Parameters
 P.theta_c_max = 45*pi/180.0;
-W_V2 = 10;
-zeta_V2 = 5;   
+W_V2 = 15;
+zeta_V2 = 1.0;   
 % Control constants
 P.wn_V2 = (1/W_V2)*P.wn_theta;
 P.ki_V2 = -1*P.wn_V2^2/(P.K_DC_theta*P.gravity);
