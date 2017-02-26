@@ -34,7 +34,7 @@ function drawAircraft(uu,V,F,patchcolors)
         ylabel('North')
         zlabel('-Down')
         view(32,47)  % set the vieew angle for figure
-        width = 1000.0;
+        width = 10000.0;
         axes = [pe-width,pe+width,pn-width,pn+width,-(pd+width),-(pd-width)];
         axis(axes)
         hold on
@@ -124,7 +124,7 @@ end
 % defineUAVBody
 %=======================================================================
 function [V,F,facecolors] = defineUAVBody
-scale = 100;
+scale = 500;
 fuse_h = 1.0*scale;
 fuse_l1 = 2.0*scale;
 fuse_l2 = 1.0*scale;

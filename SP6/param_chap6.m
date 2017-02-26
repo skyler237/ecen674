@@ -167,18 +167,18 @@ P.ki_phi = 0.04;
 % <<<<<<< Course hold >>>>>>>
 % Design Parameters
 P.phi_c_max = 45*pi/180.0;
-W_chi = 11;
-zeta_chi = 5.5;  
+P.W_chi = 11;
+P.zeta_chi = 3.0;  
 % Control constants
 Vg = P.Va0;
-P.wn_chi = (1/W_chi)*P.wn_phi;
-P.kp_chi = 2*zeta_chi*P.wn_chi*Vg/P.gravity;
+P.wn_chi = (1/P.W_chi)*P.wn_phi;
+P.kp_chi = 2*P.zeta_chi*P.wn_chi*Vg/P.gravity;
 P.ki_chi = P.wn_chi^2*Vg/P.gravity;
 P.kd_chi = 0.0;
 
 % <<<<<<< Pitch hold >>>>>>>
 % Design Parameters
-P.delta_e_max = 45.0*pi/180.0; 
+P.delta_e_max = 30.0*pi/180.0; 
 e_theta_max = 30*pi/180.0;
 zeta_theta = 0.4;
 % Control constants
@@ -216,4 +216,10 @@ Va = P.Va0;
 P.wn_h = (1/W_h)*P.wn_theta;
 P.ki_h = P.wn_h^2/(P.K_DC_theta*Va);
 P.kp_h = (2*zeta_h*P.wn_h)/(P.K_DC_theta*Va);
+
+
+% ============= Autopilot parameters ================
+P.altitude_take_off_zone = 5;
+P.altitude_hold_zone = 30;
+
 
