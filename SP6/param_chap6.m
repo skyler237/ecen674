@@ -152,4 +152,59 @@ P.r0     = x_trim(12);  % initial body frame yaw rate
 [A_lon, B_lon, A_lat, B_lat] = compute_ss_model('mavsim_trim',x_trim,u_trim);
 
 
+% ========== Control Constants ===============
+% <<<<<<< Roll hold >>>>>>>
+% Design parameters
+P.delta_a_max = 30.0*pi/180.0; 
+e_phi_max = 120*pi/180.0;
+zeta_phi = 0.95;
+% Control constants
+P.kp_phi = P.delta_a_max/e_phi_max;  
+P.wn_phi = sqrt(abs(P.a_phi2)*P.delta_a_max/e_phi_max);    
+P.kd_phi = (2*zeta_phi*P.wn_phi - P.a_phi1)/P.a_phi2;
+P.ki_phi = 0.04;
+
+% <<<<<<< Course hold >>>>>>>
+% Design Parameters
+P.phi_c_max = 45*pi/180.0;
+W_chi = 11;
+zeta_chi = 5.5;  
+% Control constants
+Vg = P.Va0;
+P.wn_chi = (1/W_chi)*P.wn_phi;
+P.kp_chi = 2*zeta_chi*P.wn_chi*Vg/P.gravity;
+P.ki_chi = P.wn_chi^2*Vg/P.gravity;
+P.kd_chi = 0.0;
+
+% <<<<<<< Pitch hold >>>>>>>
+% Design Parameters
+P.delta_e_max = 45.0*pi/180.0; 
+e_theta_max = 40*pi/180.0;
+zeta_theta = 0.4;
+% Control constants
+P.kp_theta = P.delta_e_max/e_theta_max*sign(P.a_theta3);  
+P.wn_theta = sqrt(P.a_theta2 + (P.delta_e_max/e_theta_max)*abs(P.a_theta3)); % less than or equal
+P.kd_theta = (2*zeta_theta*P.wn_theta - P.a_theta1)/P.a_theta3;
+P.ki_theta = -1.0;
+P.K_DC_theta = P.kp_theta*P.a_theta3/(P.a_theta2 + P.kp_theta*P.a_theta3);
+
+% <<<<<<< Airspeed with pitch hold >>>>>>>
+% Design Parameters
+P.theta_c_max = 45*pi/180.0;
+W_V2 = 10;
+zeta_V2 = 5;   
+% Control constants
+P.wn_V2 = (1/W_V2)*P.wn_theta;
+P.ki_V2 = -1*P.wn_V2^2/(P.K_DC_theta*P.gravity);
+P.kp_V2 = (P.a_V1 - 2*zeta_V2*P.wn_V2)/(P.K_DC_theta*P.gravity);
+
+% <<<<<<< Airspeed with throttle hold >>>>>>>
+% Design Parameters
+P.delta_t_max = 1.0;
+P.wn_V1 = 10.0;
+zeta_V1 = 0.7;   
+% Control constants
+P.ki_V1 =  P.wn_V1^2/(P.a_V2);
+P.kp_V1 = (2*zeta_V1*P.wn_V1 - P.a_V1)/(P.a_V2);
+
 

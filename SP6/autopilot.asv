@@ -64,7 +64,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P)
 
-    mode = 2;
+    mode = 3;
     switch mode
         case 1, % tune the roll loop
             phi_c = chi_c; % interpret chi_c to autopilot as course command
@@ -76,9 +76,9 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
             theta_c = 0;
         case 2, % tune the course loop
             if t==0,
-                phi_c   = course_hold(chi_c, chi, Va, 1, t, P);
+                phi_c   = course_hold(chi_c, chi, r, 1, t, P);
             else
-                phi_c   = course_hold(chi_c, chi, Va, 0, t, P);
+                phi_c   = course_hold(chi_c, chi, r, 0, t, P);
             end                
             delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
@@ -96,7 +96,7 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
                 phi_c   = course_hold(chi_c, chi, r, 0, t, P);
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 0, P);
             end
-            delta_e = pitch_hold(theta_c, theta, q, P);
+            delta_e = pitch_hold(theta_c, theta, q, t, P);
             delta_a = roll_hold(phi_c, phi, p, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
@@ -111,7 +111,7 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
                 theta_c = airspeed_with_pitch_hold(Va_c, Va, 0, P);
             end
             delta_a = roll_hold(phi_c, phi, p, t, P);
-            delta_e = pitch_hold(theta_c, theta, q, P);
+            delta_e = pitch_hold(theta_c, theta, q, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
         case 5, % tune the pitch to altitude loop 
@@ -126,10 +126,10 @@ function [delta, x_command] = autopilot_tuning(Va_c,h_c,chi_c,Va,h,chi,phi,theta
                 delta_t = airspeed_with_throttle_hold(Va_c, Va, 0, P);
             end
             delta_a = roll_hold(phi_c, phi, p, t, P);
-            delta_e = pitch_hold(theta_c, theta, q, P);
+            delta_e = pitch_hold(theta_c, theta, q, t, P);
             delta_r = 0; % no rudder
             % use trim values for elevator and throttle while tuning the lateral autopilot
-      end
+     end
     %----------------------------------------------------------
     % create outputs
     
@@ -205,7 +205,7 @@ function [delta, x_command] = autopilot_uavbook(Va_c,h_c,chi_c,Va,h,chi,phi,thet
         case 4, % altitude hold zone
     end
     
-    delta_e = pitch_hold(theta_c, theta, q, P);
+    delta_e = pitch_hold(theta_c, theta, q, t, P);
     % artificially saturation delta_t
     delta_t = sat(delta_t,1,0);
  
@@ -298,17 +298,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Roll hold function
-function delta_a = roll_hold(phi_c, phi, p, t, P)    
+function delta_a = roll_hold(phi_c, phi, p, t, P) 
     % Design Parameters
-    delta_a_max = 30.0*pi/180.0; 
-    e_max = 120*pi/180.0;
-    zeta_phi = 0.95;
+    delta_a_max = P.delta_a_max;
     
     % Control constants
-    kp_phi = delta_a_max/e_max;  
-    wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);    
-    kd_phi = (2*zeta_phi*wn_phi - P.a_phi1)/P.a_phi2;
-    ki_phi = 0.04;
+    kp_phi = P.kp_phi;
+    kd_phi = P.kd_phi;
+    ki_phi = P.ki_phi;
     
     % Compute integral
     error = phi_c - phi;
@@ -328,26 +325,15 @@ function delta_a = roll_hold(phi_c, phi, p, t, P)
 end
 
 % Course hold function
-function phi_c = course_hold(chi_c, chi, Va, isInit, t, P)
+function phi_c = course_hold(chi_c, chi, r, isInit, t, P)
     % Design Parameters
-    phi_c_max = 45*pi/180.0;
-    W_chi = 10;
-    zeta_chi = 5.5;    
-%     persistent wn_phi
-%     if (isInit)
-        % These Should match roll hold loop 
-        delta_a_max = 30.0*pi/180.0; 
-        e_max = 120*pi/180.0;
-        wn_phi = sqrt(abs(P.a_phi2)*delta_a_max/e_max);   
-%     end
+    phi_c_max = P.phi_c_max;  
     
     % Control constants
-    Vg = P.Va0;
-%     Vg = Va;
-    wn_chi = (1/W_chi)*wn_phi;
-    kp_chi = 2*zeta_chi*wn_chi*Vg/P.gravity;
-    ki_chi = wn_chi^2*Vg/P.gravity;
-    kd_chi = 0.0;
+    wn_chi = P.wn_chi;
+    kp_chi = P.kp_chi;
+    ki_chi = P.ki_chi;
+    kd_chi = P.kd_chi;
     
     % Compute integral
     error = chi_c - chi;
@@ -366,18 +352,83 @@ function phi_c = course_hold(chi_c, chi, Va, isInit, t, P)
     phi_c = sat(phi_c, phi_c_max, -phi_c_max);
 end
     
-% function theta_c = airspeed_with_pitch_hold(Va_c, Va, isInit, P)
-% 
-% end
-%     
-% function delta_e = pitch_hold(theta_c, theta, q, P)
-% 
-% end
-%     
-% function delta_t = airspeed_with_throttle_hold(Va_c, Va, isInit, P)
-% 
-% end
-%     
+function theta_c = airspeed_with_pitch_hold(Va_c, Va, isInit, P)
+    % Design Parameters
+    theta_c_max = P.theta_c_max;   
+    
+    
+    % Control constants
+    ki_V2 = P.ki_V2;
+    kp_V2 = P.kp_V2;
+    
+    % Compute integral
+    error = Va_c - Va;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if isInit
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    theta_c = kp_V2*(Va_c - Va) + ki_V2*integrator;
+    theta_c = sat(theta_c, theta_c_max, -theta_c_max);
+end
+    
+function delta_e = pitch_hold(theta_c, theta, q, t, P)
+    % Design Parameters
+    delta_e_max = P.delta_e_max; 
+    
+    % Control constants
+    kp_theta = P.kp_theta;  
+    kd_theta = P.kd_theta;
+    ki_theta = P.ki_theta;
+    
+    % Compute integral
+    error = theta_c - theta;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if t<P.Ts
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    delta_e = kp_theta*(theta_c - theta) + ki_theta*integrator - kd_theta*q;
+    delta_e = sat(delta_e, delta_e_max, -delta_e_max);
+end
+    
+function delta_t = airspeed_with_throttle_hold(Va_c, Va, isInit, P)
+% Design Parameters
+    delta_t_max = P.delta_t_max;    
+    
+    % Control constants
+    ki_V1 = P.ki_V1;
+    kp_V1 = P.kp_V1;
+    
+    % Compute integral
+    error = Va_c - Va;
+    persistent integrator
+    persistent error_d1
+    % reset persistent variables at start of simulation
+    if isInit
+       integrator = 0;
+       error_d1   = 0;
+    end
+    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    error_d1 = error;
+    
+    % Output
+    theta_c = kp_V2*(Va_c - Va) + ki_V2*integrator;
+    theta_c = sat(theta_c, delta_t_max, 0);
+end
+    
 % function theta_c = altitude_hold(h_c, h, isInit, P)
 % 
 % end
