@@ -201,8 +201,8 @@ P.kp_V2 = (P.a_V1 - 2*zeta_V2*P.wn_V2)/(P.K_DC_theta*P.gravity);
 % <<<<<<< Airspeed with throttle hold >>>>>>>
 % Design Parameters
 P.delta_t_max = 1.0;
-P.wn_V1 = 10.0;
-zeta_V1 = 0.7;   
+P.wn_V1 = 0.35;
+zeta_V1 = 3.0;   
 % Control constants
 P.ki_V1 =  P.wn_V1^2/(P.a_V2);
 P.kp_V1 = (2*zeta_V1*P.wn_V1 - P.a_V1)/(P.a_V2);
