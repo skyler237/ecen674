@@ -251,6 +251,7 @@ P.bias_gyro_z = 0;
 
 % ============= Estimator parameters ================
 % Attitude noise
+
 % P.xi_phi = 1e-4;
 % P.xi_theta = 1e-4;
 % xi_att = [P.xi_phi, P.xi_theta];
@@ -271,6 +272,29 @@ P.R_accel_z = P.sigma_accel_z^2;
 
 P.LPF_gyro_alpha = 0.7;
 P.LPF_diff_press_alpha = 0.1;
+P.LPF_static_press_alpha = 0.1;
+
+% Position noise
+scale = 1e2;
+xi_pn = 1*scale;
+xi_pe = 1*scale;
+xi_Vg = 1e-2;
+xi_chi = 1e-5;
+xi_wn = 1e-1;
+xi_we = 1e-1;
+xi_psi = 1e-1;
+xi_pos = [xi_pn, xi_pe, xi_Vg, xi_chi, xi_wn, xi_we, xi_psi];
+P.Q_pos = diag(xi_pos.^2);
+
+eta_gps_n = P.sigma_gps_n^2;
+eta_gps_e = P.sigma_gps_e^2;
+eta_gps_Vg = P.sigma_gps_Vg^2;
+eta_gps_chi = (P.sigma_gps_Vg/P.Va0)^2; % Does this work??
+eta_wind_n = 0.0001;
+eta_wind_e = 0.0001;
+eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
+P.R_pos = diag(eta_pos.^2);
+
 
 
 

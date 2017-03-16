@@ -25,6 +25,13 @@
 %            5/18/2010 - RB
 %
 
+
+% Notes:...
+% * Fix chi/psi estimation (maybe a Vg problem?)
+% * Fix throttle autopilot control
+% * Loosen up phi/roll control
+% * Figure out position spikes (maybe byproduct of course problems?)
+
 function xhat = estimate_states(uu, P)
 
    % rename inputs
@@ -52,60 +59,56 @@ function xhat = estimate_states(uu, P)
    persistent p_prev
    persistent q_prev
    persistent r_prev
-   persistent Va_prev
+   persistent static_press_prev
+   persistent diff_press_prev
    
-   if(t == 0)
+    if(t == 0)
        % Initialization
         % Attitude
         xhat_att = zeros(2,1);
-        xhat_pos = zeros(7,1);
+        xhat_pos = [0; 0; 0.1; 0; 0; 0; 0];
         u_prev = uu;
         P_att = diag([(15*pi/180)^2, (15*pi/180)^2]);
-        
+
         p_prev = y_gyro_x;
         q_prev = y_gyro_y;
         r_prev = y_gyro_z;
-        Va_prev = sqrt(2/P.rho*y_diff_pres);  
-        
+        diff_press_prev = y_diff_pres;
+        static_press_prev = y_static_pres;
+
         % Position
         pos_covariance = [20, 20, 10, 10*pi/180, 10, 10, 10*pi/180];
         P_pos = diag(pos_covariance.^2);
-   end
-        % Check for new measurements
-        new_gyro = 0;
-        new_accel = 0;
-        new_press = 0;
-        new_gps = 0;
+    end
+    
+    % Check for new measurements
+    new_gps = 0;
         
-        meas_diff = uu - u_prev;
-%         if(meas_diff(1))
-%             new_gyro = 1;
-%         end
-%         if(meas_diff(4))
-%             new_accel = 1;
-%         end
-%         if(meas_diff(7))
-%            new_press = 1; 
-%         end
-        if(meas_diff(9))
-           new_gps = 1; 
-        end       
+    meas_diff = uu - u_prev;
+    if(meas_diff(9))
+       new_gps = 1; 
+    end       
         
     % ====== Attitude estimation ======
     % u
     p = y_gyro_x;
     q = y_gyro_y;
     r = y_gyro_z;
-    Va = sqrt(2/P.rho*y_diff_pres);  
+    diff_press = y_diff_pres;
+    static_press = y_static_pres;  
+    Va = sqrt((2/P.rho)*y_diff_pres);
+    
     
     phat = LPF(p, p_prev, P.LPF_gyro_alpha);
     qhat = LPF(q, q_prev, P.LPF_gyro_alpha);
     rhat = LPF(r, r_prev, P.LPF_gyro_alpha);
-    Vahat = LPF(Va, Va_prev, P.LPF_diff_press_alpha);
+    Vahat = sqrt((2/P.rho)*LPF(diff_press, diff_press_prev, P.LPF_diff_press_alpha));
+    hhat = LPF(static_press, static_press_prev, P.LPF_static_press_alpha)/(P.rho*P.gravity);
     p_prev = p;
     q_prev = q;
     r_prev = r;    
-    Va_prev = Va;
+    diff_press_prev = diff_press;
+    static_press_prev = static_press;
 
     % x
     phi = xhat_att(1);
@@ -149,33 +152,33 @@ function xhat = estimate_states(uu, P)
 
 
     % Correction        
-    h_xu = [q*Va*st + P.gravity*st;...
+    h_att = [q*Va*st + P.gravity*st;...
            r*Va*ct - p*Va*st - P.gravity*ct*sp;...
            -q*Va*ct - P.gravity*ct*cp];
-    dh = [0,                 q*Va*ct + P.gravity*ct;...
+    dh_att = [0,                 q*Va*ct + P.gravity*ct;...
          -P.gravity*cp*ct,  -r*Va*st - p*Va*ct + P.gravity*sp*st;...
          P.gravity*sp*ct,   (q*Va + P.gravity*cp)*st];
-%         C_x = dh(1,:);
+%         C_x = dh_att(1,:);
 %         L_x = P_att*C_x'/(P.R_accel_x + C_x*P_att*C_x');
 %         P_att = (eye(2) - L_x*C_x)*P_att;
-%         xhat_att = xhat_att + L_x*(y_accel_x - h_xu(1,:));
+%         xhat_att = xhat_att + L_x*(y_accel_x - h_att(1,:));
 %         
-%         C_y = dh(2,:);
+%         C_y = dh_att(2,:);
 %         L_y = P_att*C_y'/(P.R_accel_y + C_y*P_att*C_y');
 %         P_att = (eye(2) - L_y*C_y)*P_att;
-%         xhat_att = xhat_att + L_y*(y_accel_y - h_xu(2,:));
+%         xhat_att = xhat_att + L_y*(y_accel_y - h_att(2,:));
 %         
-%         C_z = dh(3,:);
+%         C_z = dh_att(3,:);
 %         L_z = P_att*C_z'/(P.R_accel_z + C_z*P_att*C_z');        
 %         P_att = (eye(2) - L_z*C_z)*P_att;
-%         xhat_att = xhat_att + L_z*(y_accel_z - h_xu(3,:));
+%         xhat_att = xhat_att + L_z*(y_accel_z - h_att(3,:));
 
     R_att = diag([P.R_accel_x, P.R_accel_y, P.R_accel_z]);
     y_accel = [y_accel_x; y_accel_y; y_accel_z];
-    C_att = dh;
-    L_att = (1/1000)*P_att*C_att'*inv(R_att + C_att*P_att*C_att'); % HACK   
+    C_att = dh_att;
+    L_att = (1/10000)*P_att*C_att'*inv(R_att + C_att*P_att*C_att'); % HACK   
     P_att = (eye(2) - L_att*C_att)*P_att;
-    xhat_att = xhat_att + L_att*(y_accel - h_xu);
+    xhat_att = xhat_att + L_att*(y_accel - h_att);
     
     phihat = xhat_att(1);
     thetahat = xhat_att(2);
@@ -243,7 +246,7 @@ function xhat = estimate_states(uu, P)
                      psidot];  
 
             % Jacobian
-            dVgdot_dpsi = (-psidot*Va*(wn*cs + we*ss)/Vg;
+            dVgdot_dpsi = (-psidot*Va*(wn*cs + we*ss))/Vg;
             dchidot_dVg = (-P.gravity/Vg^2)*tp*cos(chi - psi);
             dchidot_dchi = (-P.gravity/Vg)*tp*sin(chi - psi);
             dchidot_dpsi = (P.gravity/Vg)*tp*sin(chi - psi);
@@ -259,22 +262,57 @@ function xhat = estimate_states(uu, P)
             P_pos = P_pos + (P.Ts_gps/N)*(A*P_pos + P_pos*A' + P.Q_pos);
         end
         
-        % Correction
+        % Correction       
+%         h_att = [q*Va*st + P.gravity*st;...
+%                r*Va*ct - p*Va*st - P.gravity*ct*sp;...
+%                -q*Va*ct - P.gravity*ct*cp];
+        h_pos = [pn;
+                 pe;
+                 Vg;
+                 chi;
+                 Va*cs + wn - Vg*cx;
+                 Va*ss + we - Vg*sx];
+%         dh_att = [0,                 q*Va*ct + P.gravity*ct;...
+%              -P.gravity*cp*ct,  -r*Va*st - p*Va*ct + P.gravity*sp*st;...
+%              P.gravity*sp*ct,   (q*Va + P.gravity*cp)*st];
+        dh_pos = [1, 0,  0,   0,     0, 0,  0;
+                  0, 1,  0,   0,     0, 0,  0;
+                  0, 0,  1,   0,     0, 0,  0;
+                  0, 0,  0,   1,     0, 0,  0;
+                  0, 0, -cx,  Vg*sx, 1, 0, -Va*ss;
+                  0, 0, -sx, -Vg*cx, 0, 1,  Va*cs];
+
+        y_wind_n = 0;
+        y_wind_e = 0;
+        y_gps = [y_gps_n; y_gps_e; y_gps_Vg; y_gps_course; y_wind_n; y_wind_e];
         
+        %TEST
+        eta_gps_n = P.sigma_gps_n^2;
+        eta_gps_e = P.sigma_gps_e^2;
+        eta_gps_Vg = P.sigma_gps_Vg^2;
+        eta_gps_chi = (P.sigma_gps_Vg/Va)^2;
+        eta_wind_n = 0.0001;
+        eta_wind_e = 0.0001;
+        eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
+        R_pos_test = diag(eta_pos.^2);
+        
+        C_pos = dh_pos;
+        L_pos = P_pos*C_pos'*inv(R_pos_test + C_pos*P_pos*C_pos'); % R test
+        P_pos = (eye(7) - L_pos*C_pos)*P_pos;
+        xhat_pos = xhat_pos + L_pos*(y_gps - h_pos);        
     end
         
         
 
    
     % Combine estimated states
-    pnhat = 0;
-    pehat = 0;
-    hhat = 0;     
-    chihat = 0;     
-    Vghat = 0;
-    wnhat = 0;
-    wehat = 0;
-    psihat = 0;
+    pnhat  =  xhat_pos(1);
+    pehat  =  xhat_pos(2);    
+    Vghat  =  xhat_pos(3);
+    chihat =  xhat_pos(4); 
+    wnhat  =  xhat_pos(5);
+    wehat  =  xhat_pos(6);
+    psihat =  xhat_pos(7);
 
     % not estimating these states 
     alphahat = 0;
