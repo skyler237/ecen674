@@ -251,9 +251,9 @@ P.bias_gyro_z = 0;
 
 % ============= Estimator parameters ================
 % Attitude noise
-P.xi_phi = 1e-4;
-P.xi_theta = 1e-4;
-xi_att = [P.xi_phi, P.xi_theta];
+% P.xi_phi = 1e-4;
+% P.xi_theta = 1e-4;
+% xi_att = [P.xi_phi, P.xi_theta];
 % P.Q_att = diag(xi_att.^2);
 P.Q_att = diag([1e-9, 1e-9]);
 
@@ -261,14 +261,9 @@ P.xi_p = P.sigma_gyro_x;
 P.xi_q = P.sigma_gyro_y;
 P.xi_r = P.sigma_gyro_z;
 P.xi_Va = P.sigma_diff_press;
-xi_u = 0*(1/10^7)*[P.xi_p, P.xi_q, P.xi_r, P.xi_Va];
-% xi_u = [P.xi_p, P.xi_q, P.xi_r, P.xi_Va];
+% xi_u = 0*(1/10^7)*[P.xi_p, P.xi_q, P.xi_r, P.xi_Va];
+xi_u = [P.xi_p, P.xi_q, P.xi_r, P.xi_Va];
 P.Q_u = diag(xi_u.^2);
-
-% P.eta_phi = 0.1;
-% P.eta_theta = 0.1;
-% eta_att = [P.eta_phi, P.eta_theta];
-% P.R_att = diag(eta_att.^2);
 
 P.R_accel_x = P.sigma_accel_x^2;
 P.R_accel_y = P.sigma_accel_y^2;

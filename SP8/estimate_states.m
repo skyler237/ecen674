@@ -97,7 +97,7 @@ function xhat = estimate_states(uu, P)
                0, cp,    -sp,   0];        
         
         % Prediction
-        N = 15;
+        N = 10;
         for i=1:N
             xhat_att = xhat_att + (P.Ts/N)*f_xu;   
         
@@ -148,7 +148,7 @@ function xhat = estimate_states(uu, P)
         R_att = diag([P.R_accel_x, P.R_accel_y, P.R_accel_z]);
         y_accel = [y_accel_x; y_accel_y; y_accel_z];
         C_att = dh;
-        L_att = P_*C_att'*inv(R_att + C_att*P_*C_att');        
+        L_att = (1/1000)*P_*C_att'*inv(R_att + C_att*P_*C_att'); % HACK   
         P_ = (eye(2) - L_att*C_att)*P_;
         xhat_att = xhat_att + L_att*(y_accel - h_xu);
         
