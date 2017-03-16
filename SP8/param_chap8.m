@@ -269,5 +269,8 @@ P.R_accel_x = P.sigma_accel_x^2;
 P.R_accel_y = P.sigma_accel_y^2;
 P.R_accel_z = P.sigma_accel_z^2;
 
+P.LPF_gyro_alpha = 0.7;
+P.LPF_diff_press_alpha = 0.1;
+
 
 

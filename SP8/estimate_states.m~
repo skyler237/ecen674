@@ -169,21 +169,13 @@ function xhat = estimate_states(uu, P)
     pnhat = 0;
     pehat = 0;
     hhat = 0;
-    Vahat = LPF(Va, Va_prev, P.LPF_diff_press_alpha);
-    Va_prev = Va;
-    
+    Vahat = Va;
     phihat = xhat_att(1);
     thetahat = xhat_att(2);
-    
     chihat = 0;
-    
-    phat = LPF(p, p_prev, P.LPF_gyro_alpha);
-    qhat = LPF(q, q_prev, P.LPF_gyro_alpha);
-    rhat = LPF(r, r_prev, P.LPF_gyro_alpha);
-    p_prev = p;
-    q_prev = q;
-    r_prev = r;
-    
+    phat = p;
+    qhat = q;
+    rhat = r;
     Vghat = 0;
     wnhat = 0;
     wehat = 0;
@@ -220,7 +212,5 @@ function xhat = estimate_states(uu, P)
     
 end
 
-function output = LPF(state, state_prev, alpha)
-    output = alpha*state_prev + (1-alpha)*state;
-end
+function output = LPF
 
