@@ -129,20 +129,27 @@ function xhat = estimate_states(uu, P)
         dh = [0,                 q*Va*ct + P.gravity*ct;...
              -P.gravity*cp*ct,  -r*Va*st - p*Va*ct + P.gravity*sp*st;...
              P.gravity*sp*ct,   (q*Va + P.gravity*cp)*st];
-        C_x = dh(1,:);
-        L_x = P_*C_x'/(P.R_accel_x + C_x*P_*C_x');
-        P_ = (eye(2) - L_x*C_x)*P_;
-        xhat_att = xhat_att + L_x*(y_accel_x - h_xu(1,:));
+%         C_x = dh(1,:);
+%         L_x = P_*C_x'/(P.R_accel_x + C_x*P_*C_x');
+%         P_ = (eye(2) - L_x*C_x)*P_;
+%         xhat_att = xhat_att + L_x*(y_accel_x - h_xu(1,:));
+%         
+%         C_y = dh(2,:);
+%         L_y = P_*C_y'/(P.R_accel_y + C_y*P_*C_y');
+%         P_ = (eye(2) - L_y*C_y)*P_;
+%         xhat_att = xhat_att + L_y*(y_accel_y - h_xu(2,:));
+%         
+%         C_z = dh(3,:);
+%         L_z = P_*C_z'/(P.R_accel_z + C_z*P_*C_z');        
+%         P_ = (eye(2) - L_z*C_z)*P_;
+%         xhat_att = xhat_att + L_z*(y_accel_z - h_xu(3,:));
         
-        C_y = dh(2,:);
-        L_y = P_*C_y'/(P.R_accel_y + C_y*P_*C_y');
-        P_ = (eye(2) - L_y*C_y)*P_;
-        xhat_att = xhat_att + L_y*(y_accel_y - h_xu(2,:));
-        
-        C_z = dh(3,:);
-        L_z = P_*C_z'/(P.R_accel_z + C_z*P_*C_z');        
-        P_ = (eye(2) - L_z*C_z)*P_;
-        xhat_att = xhat_att + L_z*(y_accel_z - h_xu(3,:));
+        R_att = diag([P.R_accel_x, P.R_accel_y, P.R_accel_z]);
+        y_accel = [y_accel_x; y_accel_y; y_accel_z];
+        C_att = dh;
+        L_att = P_*C_att'*inv(R_att + C_att*P_*C_att');        
+        P_ = (eye(2) - L_att*C_att)*P_;
+        xhat_att = xhat_att + L_att*(y_accel - h_xu(3,:));
         
         % ====== GPS smoothing ======
         
