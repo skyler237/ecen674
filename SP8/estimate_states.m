@@ -48,18 +48,13 @@ function xhat = estimate_states(uu, P)
    persistent xhat_pos
    persistent P_
    
-    p = y_gyro_x;
-    q = y_gyro_y;
-    r = y_gyro_z;
-    Va = sqrt(2/P.rho*y_diff_pres);  
-   
    if(t == 0)
        % Initialization
         xhat_att = zeros(2,1);
         xhat_pos = zeros(7,1);
         u_prev = uu;
-        P_ = diag([(10*pi/180)^2, (10*pi/180)^2]);
-   else
+        P_ = diag([(15*pi/180)^2, (15*pi/180)^2]);
+   end
         % Check for new measurements
         new_gyro = 0;
         new_accel = 0;
@@ -102,7 +97,7 @@ function xhat = estimate_states(uu, P)
                0, cp,    -sp,   0];        
         
         % Prediction
-        N = 5;
+        N = 15;
         for i=1:N
             xhat_att = xhat_att + (P.Ts/N)*f_xu;   
         
@@ -114,13 +109,19 @@ function xhat = estimate_states(uu, P)
             st = sin(theta);
             ct = cos(theta);
             tt = tan(theta);
+            
+            f_xu = [p + q*sp*tt + r*cp*tt;...
+                    q*cp - r*sp];
+            G = [1, sp*tt, cp*tt, 0;...
+                 0, cp,    -sp,   0];   
 
             % Jacobians
-            df = [q*cp*tt - r*sp*tt,     (q*sp-r*cp)/ct^2;...
+            df = [q*cp*tt - r*sp*tt,     (q*sp - r*cp)/(ct^2);...
                  -q*sp - r*cp,           0];
             A = df;
             P_ = P_ + (P.Ts/N)*(A*P_ + P_*A' + G*P.Q_u*G' + P.Q_att);
         end
+       
    
         % Correction        
         h_xu = [q*Va*st + P.gravity*st;...
@@ -149,11 +150,10 @@ function xhat = estimate_states(uu, P)
         C_att = dh;
         L_att = P_*C_att'*inv(R_att + C_att*P_*C_att');        
         P_ = (eye(2) - L_att*C_att)*P_;
-        xhat_att = xhat_att + L_att*(y_accel - h_xu(3,:));
+        xhat_att = xhat_att + L_att*(y_accel - h_xu);
         
         % ====== GPS smoothing ======
-        
-   end
+
    
     % Combine estimated states
     pnhat = 0;
