@@ -34,19 +34,27 @@ function y = sensors(uu, P)
 %    wd      = uu(24);
     
     % simulate rate gyros (units are rad/sec)
-    y_gyro_x = p + P.sigma_gyro_x*randn;
-    y_gyro_y = q + P.sigma_gyro_y*randn;
-    y_gyro_z = r + P.sigma_gyro_z*randn;
+    y_gyro_x = p + P.sigma_gyro_x;
+    y_gyro_y = q + P.sigma_gyro_y;
+    y_gyro_z = r + P.sigma_gyro_z;
+%     y_gyro_x = p + P.sigma_gyro_x*randn;
+%     y_gyro_y = q + P.sigma_gyro_y*randn;
+%     y_gyro_z = r + P.sigma_gyro_z*randn;
 
     % simulate accelerometers (units of g)
-    y_accel_x = F_x/P.mass + P.gravity*sin(theta)+P.sigma_accel_x*randn;
-    y_accel_y = F_y/P.mass - P.gravity*cos(theta)*sin(phi)+P.sigma_accel_y*randn;
-    y_accel_z = F_z/P.mass - P.gravity*cos(theta)*cos(phi)+P.sigma_accel_z*randn;
+    y_accel_x = F_x/P.mass + P.gravity*sin(theta)+P.sigma_accel_x;
+    y_accel_y = F_y/P.mass - P.gravity*cos(theta)*sin(phi)+P.sigma_accel_y;
+    y_accel_z = F_z/P.mass - P.gravity*cos(theta)*cos(phi)+P.sigma_accel_z;
+%     y_accel_x = F_x/P.mass + P.gravity*sin(theta)+P.sigma_accel_x*randn;
+%     y_accel_y = F_y/P.mass - P.gravity*cos(theta)*sin(phi)+P.sigma_accel_y*randn;
+%     y_accel_z = F_z/P.mass - P.gravity*cos(theta)*cos(phi)+P.sigma_accel_z*randn;
 
     % simulate pressure sensors
     h = -pd;
-    y_static_pres = P.rho*P.gravity*h + P.beta_static_press + P.sigma_static_press*randn;
-    y_diff_pres = (P.rho*Va^2)/2 + P.beta_diff_press + P.sigma_diff_press*randn;
+    y_static_pres = P.rho*P.gravity*h + P.beta_static_press + P.sigma_static_press;
+    y_diff_pres = (P.rho*Va^2)/2 + P.beta_diff_press + P.sigma_diff_press;
+%     y_static_pres = P.rho*P.gravity*h + P.beta_static_press + P.sigma_static_press*randn;
+%     y_diff_pres = (P.rho*Va^2)/2 + P.beta_diff_press + P.sigma_diff_press*randn;
 
     % construct total output
     y = [...

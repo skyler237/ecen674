@@ -45,14 +45,20 @@ function y = gps(uu, P)
     nu_h = exp(-P.k_gps*P.Ts_gps)*nu_h + P.sigma_gps_h*randn;
  
     % construct North, East, and altitude GPS measurements
-    y_gps_n = pn + nu_n;
-    y_gps_e = pe + nu_e; 
-    y_gps_h = -pd + nu_h; 
+    y_gps_n = pn;
+    y_gps_e = pe; 
+    y_gps_h = -pd;
+%     y_gps_n = pn + nu_n;
+%     y_gps_e = pe + nu_e; 
+%     y_gps_h = -pd + nu_h; 
     
     % construct groundspeed and course measurements
-    y_gps_Vg     = sqrt((Va*cos(psi)+wn)^2 + (Va*sin(psi)+we)^2) + P.sigma_gps_Vg*randn;
+    y_gps_Vg     = sqrt((Va*cos(psi)+wn)^2 + (Va*sin(psi)+we)^2) + P.sigma_gps_Vg;
     sigma_gps_chi = P.sigma_gps_Vg/Va;
-    y_gps_course = atan2(Va*sin(psi)+we, Va*cos(psi)+wn) + sigma_gps_chi*randn;
+    y_gps_course = atan2(Va*sin(psi)+we, Va*cos(psi)+wn) + sigma_gps_chi;
+%     y_gps_Vg     = sqrt((Va*cos(psi)+wn)^2 + (Va*sin(psi)+we)^2) + P.sigma_gps_Vg*randn;
+%     sigma_gps_chi = P.sigma_gps_Vg/Va;
+%     y_gps_course = atan2(Va*sin(psi)+we, Va*cos(psi)+wn) + sigma_gps_chi*randn;
 
     % construct total output
     y = [...
