@@ -195,7 +195,7 @@ function [delta, x_command] = autopilot_uavbook(Va_c,h_c,chi_c,Va,h,chi,phi,thet
         initialize_integrator = 1;
     end
     
-    full_throttle = 0.4;
+    full_throttle = 0.3;
     % implement state machine
     switch altitude_state,
         case 1,  % in take-off zone

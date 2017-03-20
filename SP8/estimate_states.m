@@ -184,7 +184,7 @@ function xhat = estimate_states(uu, P)
     thetahat = xhat_att(2);
 
     % ====== GPS smoothing ======    
-    if(new_gps)
+    
         % u
         Va = Vahat;
         q = qhat;
@@ -220,7 +220,7 @@ function xhat = estimate_states(uu, P)
                  psidot];
         
         % Prediction
-        N = 10;
+        N = 100;
         for i=1:N
             xhat_pos = xhat_pos + (P.Ts_gps/N)*f_pos;
 
@@ -262,19 +262,15 @@ function xhat = estimate_states(uu, P)
             P_pos = P_pos + (P.Ts_gps/N)*(A*P_pos + P_pos*A' + P.Q_pos);
         end
         
+   if(new_gps)
         % Correction       
-%         h_att = [q*Va*st + P.gravity*st;...
-%                r*Va*ct - p*Va*st - P.gravity*ct*sp;...
-%                -q*Va*ct - P.gravity*ct*cp];
         h_pos = [pn;
                  pe;
                  Vg;
                  chi;
                  Va*cs + wn - Vg*cx;
                  Va*ss + we - Vg*sx];
-%         dh_att = [0,                 q*Va*ct + P.gravity*ct;...
-%              -P.gravity*cp*ct,  -r*Va*st - p*Va*ct + P.gravity*sp*st;...
-%              P.gravity*sp*ct,   (q*Va + P.gravity*cp)*st];
+             
         dh_pos = [1, 0,  0,   0,     0, 0,  0;
                   0, 1,  0,   0,     0, 0,  0;
                   0, 0,  1,   0,     0, 0,  0;
@@ -290,9 +286,9 @@ function xhat = estimate_states(uu, P)
         eta_gps_n = P.sigma_gps_n^2;
         eta_gps_e = P.sigma_gps_e^2;
         eta_gps_Vg = P.sigma_gps_Vg^2;
-        eta_gps_chi = (P.sigma_gps_Vg/Va)^2;
-        eta_wind_n = 0.0001;
-        eta_wind_e = 0.0001;
+        eta_gps_chi = (P.sigma_gps_Vg/Vahat)^2;
+        eta_wind_n = 1000;
+        eta_wind_e = 1000;
         eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
         R_pos_test = diag(eta_pos.^2);
         
