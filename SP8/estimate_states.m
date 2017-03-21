@@ -66,7 +66,7 @@ function xhat = estimate_states(uu, P)
        % Initialization
         % Attitude
         xhat_att = zeros(2,1);
-        xhat_pos = [0; 0; 0.1; 0; 0; 0; 0];
+        xhat_pos = [0; 0; 35; 0; 0; 0; 0.0001];
         u_prev = uu;
         P_att = diag([(15*pi/180)^2, (15*pi/180)^2]);
 
@@ -77,7 +77,7 @@ function xhat = estimate_states(uu, P)
         static_press_prev = y_static_pres;
 
         % Position
-        pos_covariance = [20, 20, 10, 10*pi/180, 10, 10, 10*pi/180];
+        pos_covariance = [20, 20, 10, 5*pi/180, 5, 5, 5*pi/180];
         P_pos = diag(pos_covariance.^2);
     end
     
@@ -220,9 +220,9 @@ function xhat = estimate_states(uu, P)
                  psidot];
         
         % Prediction
-        N = 100;
+        N = 10;
         for i=1:N
-            xhat_pos = xhat_pos + (P.Ts_gps/N)*f_pos;
+            xhat_pos = xhat_pos + (P.Ts/N)*f_pos;
 
             % Recompute trig values
             Vg = xhat_pos(3);
