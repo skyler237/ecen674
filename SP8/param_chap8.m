@@ -168,8 +168,8 @@ P.ki_phi = 0.04;
 % <<<<<<< Course hold >>>>>>>
 % Design Parameters
 P.phi_c_max = 45*pi/180.0;
-P.W_chi = 11;
-P.zeta_chi = 3.0;  
+P.W_chi = 10;
+P.zeta_chi = 1.0;  
 % Control constants
 Vg = P.Va0;
 P.wn_chi = (1/P.W_chi)*P.wn_phi;
@@ -278,22 +278,22 @@ P.LPF_static_press_alpha = 0.1;
 scale = 1e2;
 xi_pn = 1*scale;
 xi_pe = 1*scale;
-xi_Vg = 1e-1;
-xi_chi = 1e-1;
-xi_wn = 1e-4;
-xi_we = 1e-4;
-xi_psi = 1e1;
+xi_Vg = 1e4;
+xi_chi = 1e-6;
+xi_wn = 1e4;
+xi_we = 1e4;
+xi_psi = 1e-1;
 xi_pos = [xi_pn, xi_pe, xi_Vg, xi_chi, xi_wn, xi_we, xi_psi];
 P.Q_pos = diag(xi_pos.^2);
 
-eta_gps_n = P.sigma_gps_n^2;
-eta_gps_e = P.sigma_gps_e^2;
-eta_gps_Vg = P.sigma_gps_Vg^2;
-eta_gps_chi = (P.sigma_gps_Vg/P.Va0)^2; % Does this work??
-eta_wind_n = 1e-2;
-eta_wind_e = 1e-2;
-eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
-P.R_pos = diag(eta_pos.^2);
+% eta_gps_n = P.sigma_gps_n^2;
+% eta_gps_e = P.sigma_gps_e^2;
+% eta_gps_Vg = P.sigma_gps_Vg^2;
+% eta_gps_chi = (P.sigma_gps_Vg/P.Va0)^2; % Does this work??
+% eta_wind_n = 1e-2;
+% eta_wind_e = 1e-2;
+% eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
+% P.R_pos = diag(eta_pos.^2);
 
 
 

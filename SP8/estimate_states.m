@@ -62,11 +62,15 @@ function xhat = estimate_states(uu, P)
    persistent static_press_prev
    persistent diff_press_prev
    
+   persistent Va_prev
+   persistent Vadot_prev
+   persistent t_prev
+   
     if(t == 0)
        % Initialization
         % Attitude
         xhat_att = zeros(2,1);
-        xhat_pos = [0; 0; 35; 0; 0; 0; 0.0001];
+        xhat_pos = [0; 0; 35; 0; 0; 0; 0.0];
         u_prev = uu;
         P_att = diag([(15*pi/180)^2, (15*pi/180)^2]);
 
@@ -79,6 +83,9 @@ function xhat = estimate_states(uu, P)
         % Position
         pos_covariance = [20, 20, 10, 5*pi/180, 5, 5, 5*pi/180];
         P_pos = diag(pos_covariance.^2);
+        
+        t_prev = 0;
+        Vadot_prev = 0;
     end
     
     % Check for new measurements
@@ -88,6 +95,7 @@ function xhat = estimate_states(uu, P)
     if(meas_diff(9))
        new_gps = 1; 
     end       
+    u_prev = uu;
         
     % ====== Attitude estimation ======
     % u
@@ -145,7 +153,7 @@ function xhat = estimate_states(uu, P)
 
         % Jacobians
         df_att = [q*cp*tt - r*sp*tt,     (q*sp - r*cp)/(ct^2);...
-             -q*sp - r*cp,           0];
+                  -q*sp - r*cp,           0];
         A = df_att;
         P_att = P_att + (P.Ts/N)*(A*P_att + P_att*A' + G*P.Q_u*G' + P.Q_att);
     end
@@ -195,34 +203,43 @@ function xhat = estimate_states(uu, P)
         sp = sin(phi);
         tp = tan(phi);
         ct = cos(theta);
-        st = sin(theta); 
         
         % xhat
-        pn = xhat_pos(1);
-        pe = xhat_pos(2);
-        Vg = xhat_pos(3);
-        chi = xhat_pos(4);
-        cx = cos(chi);
-        sx = sin(chi);
-        wn = xhat_pos(5);
-        we = xhat_pos(6);
-        psi = xhat_pos(7);
-        cs = cos(psi);
-        ss = sin(psi);        
-        psidot = q*(sp/ct) + r*(cp/ct);
+%         pn = xhat_pos(1);
+%         pe = xhat_pos(2);
+%         Vg = xhat_pos(3);
+%         chi = xhat_pos(4);
+%         cx = cos(chi);
+%         sx = sin(chi);
+%         wn = xhat_pos(5);
+%         we = xhat_pos(6);
+%         psi = xhat_pos(7);
+%         cs = cos(psi);
+%         ss = sin(psi);        
+%         psidot = q*(sp/ct) + r*(cp/ct);
+%         Vgdot = ((Va*cs + wn)*(-Va*psidot*ss) + (Va*ss + we)*(Va*psidot*cs))/Vg;
+% 
+%         f_pos = [Vg*cx;
+%                  Vg*sx;
+%                  Vgdot;
+%                  (P.gravity/Vg)*tp*cos(chi - psi);
+%                  0;
+%                  0;
+%                  psidot];   
+
+        % Calculate Vadot
+        tau = 0.05;
+        dt = t - t_prev;
+        t_prev = t;
         
-        f_pos = [Vg*cx;
-                 Vg*sx;
-                 ((Va*cs + wn)*(-Va*psidot*ss) + (Va*ss + we)*(Va*psidot*cs))/Vg;
-                 (P.gravity/Vg)*tp*cos(chi - psi);
-                 0;
-                 0;
-                 psidot];
+        Vadot = tustinDerivative(Va, Va_prev, Vadot_prev, tau, dt);
+        Va_prev = Va;
+        Vadot_prev = Vadot;
         
         % Prediction
-        N = 10;
+        N = 15;
         for i=1:N
-            xhat_pos = xhat_pos + (P.Ts/N)*f_pos;
+           
 
             % Recompute trig values
             Vg = xhat_pos(3);
@@ -235,15 +252,19 @@ function xhat = estimate_states(uu, P)
             cs = cos(psi);
             ss = sin(psi);        
             psidot = q*(sp/ct) + r*(cp/ct);
-            Vgdot = ((Va*cs + wn)*(-Va*psidot*ss) + (Va*ss + we)*(Va*psidot*cs))/Vg;
+%             Vgdot = ((Va*cs + wn)*(-Va*psidot*ss) + (Va*ss + we)*(Va*psidot*cs))/Vg;
+            Vgdot = ((Va*cs + wn)*(Vadot*cs-Va*psidot*ss) + (Va*ss + we)*(Vadot*ss + Va*psidot*cs))/Vg;
 
             f_pos = [Vg*cx;
                      Vg*sx;
                      Vgdot;
-                     (P.gravity/Vg)*tp*cos(chi - psi);
+%                      (P.gravity/Vg)*tp*cos(chi - psi);
+                     (P.gravity/Vg)*tp;
                      0;
                      0;
                      psidot];  
+                 
+            xhat_pos = xhat_pos + (P.Ts/N)*f_pos;
 
             % Jacobian
             dVgdot_dpsi = (-psidot*Va*(wn*cs + we*ss))/Vg;
@@ -259,10 +280,22 @@ function xhat = estimate_states(uu, P)
                       0, 0, 0,          0,              0,              0,              0];
                       
             A = df_pos;
-            P_pos = P_pos + (P.Ts_gps/N)*(A*P_pos + P_pos*A' + P.Q_pos);
+            P_pos = P_pos + (P.Ts/N)*(A*P_pos + P_pos*A' + P.Q_pos);
         end
         
    if(new_gps)
+        pn = xhat_pos(1);
+        pe = xhat_pos(2);
+        Vg = xhat_pos(3);
+        chi = xhat_pos(4);
+        cx = cos(chi);
+        sx = sin(chi);
+        wn = xhat_pos(5);
+        we = xhat_pos(6);
+        psi = xhat_pos(7);
+        cs = cos(psi);
+        ss = sin(psi);        
+       
         % Correction       
         h_pos = [pn;
                  pe;
@@ -286,9 +319,9 @@ function xhat = estimate_states(uu, P)
         eta_gps_n = P.sigma_gps_n^2;
         eta_gps_e = P.sigma_gps_e^2;
         eta_gps_Vg = P.sigma_gps_Vg^2;
-        eta_gps_chi = (P.sigma_gps_Vg/Vahat)^2;
-        eta_wind_n = 1000;
-        eta_wind_e = 1000;
+        eta_gps_chi = (P.sigma_gps_Vg/Va)^2;
+        eta_wind_n = 1e-3;
+        eta_wind_e = 1e-3;
         eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
         R_pos_test = diag(eta_pos.^2);
         
@@ -343,5 +376,14 @@ end
 
 function output = LPF(state, state_prev, alpha)
     output = alpha*state_prev + (1-alpha)*state;
+end
+
+function xdot = tustinDerivative(x, x_prev, xdot_prev, tau, dt)
+    if (dt > 0)
+        beta = (2*tau - dt)/(2*tau + dt);
+        xdot = beta*xdot_prev + (1-beta)*(x - x_prev)/dt;
+    else
+        xdot = xdot_prev;
+    end
 end
 
