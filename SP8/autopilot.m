@@ -412,7 +412,9 @@ function theta_c = airspeed_with_pitch_hold(Va_c, Va, isInit, P)
        integrator = 0;
        error_d1   = 0;
     end
-    integrator = integrator + (P.Ts/2)*(error+error_d1);
+    if (abs(error) < 3)
+        integrator = integrator + (P.Ts/2)*(error+error_d1);
+    end
     error_d1 = error;
     
     % Output
