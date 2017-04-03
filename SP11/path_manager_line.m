@@ -53,7 +53,7 @@ function out = path_manager_line(in,P,start_of_simulation)
   p = [pn; pe; -h];
 
   persistent waypoints_old   % stored copy of old waypoints
-  persistent ptr_a           % waypoint pointer
+  persistent w_index           % waypoint pointer
   persistent flag_need_new_waypoints % flag that request new waypoints from path planner
   
   
@@ -64,26 +64,46 @@ function out = path_manager_line(in,P,start_of_simulation)
   end
   
   % if the waypoints have changed, update the waypoint pointer
-  if min(min(waypoints==waypoints_old))==0,
-      ptr_a = 1;
+  if min(min(waypoints==waypoints_old))==0
+      w_index = 2;
       waypoints_old = waypoints;
       flag_need_new_waypoints = 0;
   end
   
- 
+  q_current      = (waypoints(1:3,  w_index) - waypoints(1:3,  w_index - 1));
+  if(norm(q_current) > 0)
+    q_current      = q_current/norm(q_current);
+  end
+  
+  
+  q_next      = (waypoints(1:3,  w_index + 1) - waypoints(1:3,  w_index));
+  if(norm(q_next) > 0)
+    q_next      = q_next/norm(q_next);
+  end  
+  
+  n = (q_current + q_next);
+  if(norm(n) > 0)
+    n = n/norm(n);
+  end
+
   % construct output for path follower
-  flag   = ;                  % following straight line path
-  Va_d   = ; % desired airspeed along waypoint path
-  r      = ;
-  q      = ;
-  q      = q/norm(q);
-  c      = ;
-  rho    = ;
-  lambda = ;
+  flag   = 1;                   % following straight line path
+  Va_d   = P.Va0;               % desired airspeed along waypoint path
+  r      = waypoints(1:3,  w_index - 1);
+  q      = q_current;
+  c      = [-999; -999; -999];  % not used
+  rho    = 999;                 % not used
+  lambda = 0;                   % not used
+  
+  if inHalfSpace(p, waypoints(1:3,  w_index ),  n)
+     if w_index == size(waypoints,1) - 1
+         flag_need_new_waypoints = 1;
+     else
+        w_index = w_index + 1;
+     end
+  end
   
   out = [flag; Va_d; r; q; c; rho; lambda; state; flag_need_new_waypoints];
 
-  % determine if next waypoint path has been reached, and rotate ptrs if
-  % necessary
   
 end

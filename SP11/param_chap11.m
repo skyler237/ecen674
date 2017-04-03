@@ -132,6 +132,7 @@ P.x_trim = x_trim;
 P.pn0    = 0;  % initial North position
 P.pe0    = 0;  % initial East position
 P.pd0    = -100;  % initial Down position (negative altitude)
+P.h0     = -P.pd0;
 P.u0     = x_trim(4);  % initial velocity along body x-axis
 P.v0     = x_trim(5);  % initial velocity along body y-axis
 P.w0     = x_trim(6);  % initial velocity along body z-axis
@@ -156,6 +157,7 @@ P.r0     = x_trim(12);  % initial body frame yaw rate
 % ========== Control Constants ===============
 % <<<<<<< Roll hold >>>>>>>
 % Design parameters
+P.phi_max = 50.0*pi/180.0;
 P.delta_a_max = 30.0*pi/180.0; 
 e_phi_max = 120*pi/180.0;
 zeta_phi = 0.95;
@@ -306,12 +308,13 @@ P.b_Va = 7.0;
 % P.b_phi = 70.5e1; % P.kp_phi = 0.25
 
 % =============== Path following parameters ====================
-P.k_path = 0.002;
+P.k_path = 0.02;
 P.k_orbit = 2;
 P.chi_inf = pi/4;
 P.gamma_max = pi/4;
 
-% chapter 11 - path manager
+
+% =============== path manager parameters ====================
 % number of waypoints in data structure
 P.size_waypoint_array = 100;
 P.R_min = P.Va0^2/P.gravity/tan(P.phi_max);
@@ -322,6 +325,5 @@ building_height = 300;   % maximum height of buildings
 %building_height = 1;   % maximum height of buildings (for camera)
 num_blocks      = 5;    % number of blocks in city
 street_width    = .8;   % percent of block that is street.
-P.pd0           = -h0;  % initial height of MAV
 P.map = createWorld(city_width, building_height, num_blocks, street_width);
 
