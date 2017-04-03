@@ -103,13 +103,13 @@ function out = path_manager_fillet(in,P,start_of_simulation)
              state_transition = 2; 
           end          
              
-      case 2 % follow orbit from wpp_a-wpp_b to wpp_b-wpp_c
+      case 2 % follow orbit from wpp_a-wpp_b to wpp_b-wpp          
           flag   = 2;  % following orbit
           Va_d   = P.Va0; % desired airspeed along waypoint path
           r      = waypoints(1:3, w_index - 1);
           q      = q_current;
 %           beta   = ;
-          c      = waypoints(1:3, w_index) + (P.R_min/(sin(varrho/2)))*(q_current - q_next)/norm(q_current - q_next);
+          c      = waypoints(1:3, w_index - 1) + (P.R_min/(sin(varrho/2)))*(q_current - q_next)/norm(q_current - q_next);
           rho    = P.R_min;
           lambda = sign(q_current(1)*q_next(2) - q_current(2)*q_next(1));
           
