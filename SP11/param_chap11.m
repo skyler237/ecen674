@@ -157,7 +157,7 @@ P.r0     = x_trim(12);  % initial body frame yaw rate
 % ========== Control Constants ===============
 % <<<<<<< Roll hold >>>>>>>
 % Design parameters
-P.phi_max = 50.0*pi/180.0;
+P.phi_max = 35.0*pi/180.0;
 P.delta_a_max = 30.0*pi/180.0; 
 e_phi_max = 120*pi/180.0;
 zeta_phi = 0.95;
