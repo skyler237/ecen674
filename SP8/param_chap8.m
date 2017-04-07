@@ -278,11 +278,11 @@ P.LPF_static_press_alpha = 0.1;
 scale = 1e2;
 xi_pn = 1*scale;
 xi_pe = 1*scale;
-xi_Vg = 1e-5;
+xi_Vg = 1e-4;
 xi_chi = 1e-1;
-xi_wn = 1e-1;
-xi_we = 1e-1;
-xi_psi = 1e1;
+xi_wn = 1e-3;
+xi_we = 1e-3;
+xi_psi = 1e-3;
 xi_pos = [xi_pn, xi_pe, xi_Vg, xi_chi, xi_wn, xi_we, xi_psi];
 P.Q_pos = diag(xi_pos.^2);
 
