@@ -85,8 +85,8 @@ P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
 
 % wind parameters
-P.wind_n = 0;%3;
-P.wind_e = 0;%2;
+P.wind_n = 3;%3;
+P.wind_e = 2;%2;
 P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
@@ -274,24 +274,25 @@ P.LPF_gyro_alpha = 0.7;
 P.LPF_diff_press_alpha = 0.1;
 P.LPF_static_press_alpha = 0.1;
 
-% Position noise
+% Position process noise
 scale = 1e2;
 xi_pn = 1*scale;
 xi_pe = 1*scale;
-xi_Vg = 1e-1;
+xi_Vg = 1e-5;
 xi_chi = 1e-1;
-xi_wn = 1e-4;
-xi_we = 1e-4;
+xi_wn = 1e-1;
+xi_we = 1e-1;
 xi_psi = 1e1;
 xi_pos = [xi_pn, xi_pe, xi_Vg, xi_chi, xi_wn, xi_we, xi_psi];
 P.Q_pos = diag(xi_pos.^2);
 
+% Sensor noise
 eta_gps_n = P.sigma_gps_n^2;
 eta_gps_e = P.sigma_gps_e^2;
 eta_gps_Vg = P.sigma_gps_Vg^2;
 eta_gps_chi = (P.sigma_gps_Vg/P.Va0)^2; % Does this work??
-eta_wind_n = 1e-2;
-eta_wind_e = 1e-2;
+eta_wind_n = 1e-4;
+eta_wind_e = 1e-4;
 eta_pos = [eta_gps_n, eta_gps_e, eta_gps_Vg, eta_gps_chi, eta_wind_n, eta_wind_e];
 P.R_pos = diag(eta_pos.^2);
 
