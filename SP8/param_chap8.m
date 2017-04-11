@@ -168,8 +168,8 @@ P.ki_phi = 0.04;
 % <<<<<<< Course hold >>>>>>>
 % Design Parameters
 P.phi_c_max = 45*pi/180.0;
-P.W_chi = 11;
-P.zeta_chi = 3.0;  
+P.W_chi = 15;
+P.zeta_chi = 0.7;  
 % Control constants
 Vg = P.Va0;
 P.wn_chi = (1/P.W_chi)*P.wn_phi;
@@ -279,7 +279,7 @@ scale = 1e2;
 xi_pn = 1*scale;
 xi_pe = 1*scale;
 xi_Vg = 1e-4;
-xi_chi = 1e-1;
+xi_chi = 1e-4;
 xi_wn = 1e-3;
 xi_we = 1e-3;
 xi_psi = 1e-3;
