@@ -4,7 +4,7 @@
 %   - 3/25/2010 - RWB
 %   - 4/7/2010 - RWB
 %
-% input is:
+% input is:d
 %   num_waypoints - number of waypoint configurations
 %   waypoints    - an array of dimension 5 by P.size_waypoint_array.
 %                - the first num_waypoints rows define waypoint
