@@ -25,12 +25,13 @@
 %       dubinspath.q3   - unit vector defining direction of half plane H3
 % 
 
-function dubinspath = dubinsParameters(start_node, end_node, R)
+function [dubinspath, success] = dubinsParameters(start_node, end_node, R)
 
   ell = norm(start_node(1:2)-end_node(1:2));
   if ell<2*R,
       disp('The distance between nodes must be larger than 2R.');
       dubinspath = [];
+      success = 0;
   else
       
     
@@ -144,6 +145,7 @@ function dubinspath = dubinsParameters(start_node, end_node, R)
     dubinspath.w2   = w2;
     dubinspath.w3   = w3;
     dubinspath.q3   = q3;
+    success = 1;
   end
 end
 

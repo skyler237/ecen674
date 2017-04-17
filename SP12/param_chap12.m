@@ -85,8 +85,8 @@ P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
 
 % wind parameters
-P.wind_n = 3;%3;
-P.wind_e = -3;%2;
+P.wind_n = 0;%3;
+P.wind_e = 0;%2;
 P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
