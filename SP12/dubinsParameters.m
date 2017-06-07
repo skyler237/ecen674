@@ -34,7 +34,7 @@ function [dubinspath, success] = dubinsParameters(start_node, end_node, R)
       success = 0;
   else
       
-    
+    22222222222222222222222222222222222222222222
     
     ps   = start_node(1:3)';
     chis = start_node(4);

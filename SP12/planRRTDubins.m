@@ -14,7 +14,7 @@ function path_out=planRRTDubins(wpp_start, wpp_end, R, map)
 
     % desired down position is down position of end node
     pd = wpp_end(3);
-    chi = -9999;
+    chi = 0;
     
     % specify start and end nodes from wpp_start and wpp_end
     start_node = [wpp_start(1), wpp_start(2), pd, chi, 0, 0, 0];
@@ -26,6 +26,9 @@ function path_out=planRRTDubins(wpp_start, wpp_end, R, map)
     
     % check to see if start_node connects directly to end_node
     if ( (collision(start_node,end_node,R,map)==0) )
+        tmp = end_node(1:3)-start_node(1:3);
+        chi = atan2(tmp(2), tmp(1));
+        end_node(4) = chi;
         path = [start_node; end_node];
     else
         numPaths = 0;
@@ -93,7 +96,7 @@ function [X,Y,Z] = pointsAlongDubinsPath(start_node, end_node, R, Del)
     [arc1X, arc1Y, arc1Z] = pointsAlongArc(dubinspath.ps, dubinspath.w1, dubinspath.cs, dubinspath.R, dubinspath.lams, Del);
     
     % Get points along line
-    [lineX, lineY, lineZ] = pointsAlongLine(start_node, end_node, Del);
+    [lineX, lineY, lineZ] = pointsAlongLine(dubinspath.w1, dubinspath.w2, Del);
     
     % Get points along ending arc
     [arc2X, arc2Y, arc2Z] = pointsAlongArc(dubinspath.w2, dubinspath.pe, dubinspath.ce, dubinspath.R, dubinspath.lame, Del);
@@ -200,7 +203,7 @@ function [new_tree,flag] = extendTree(tree,end_node,segmentLength,R,map,pd,chi)
     tmp = randomNode(1:3)-tree(idx,1:3);
     chi = atan2(tmp(2), tmp(1));
 %     new_point = tree(idx,1:3)+L*(tmp/norm(tmp));
-    new_point = tree(idx,1:3)+(tmp);
+    new_point = tree(idx,1:3)+tmp;
     tmp_node = [new_point, chi];
 
 %     fprintf('extend A\n')
@@ -220,6 +223,9 @@ function [new_tree,flag] = extendTree(tree,end_node,segmentLength,R,map,pd,chi)
   if ((collision(new_node,end_node, R, map)==0) )
     flag = 1;
     new_tree(end,7)=1;  % mark node as connecting to end.
+    tmp = end_node(1:3)-new_node(1:3);
+    chi = atan2(tmp(2), tmp(1));
+    end_node(4) = chi;
   else
     flag = 0;
   end
